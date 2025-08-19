@@ -9,7 +9,6 @@ export const useAuth = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   const login = useCallback((user, token, expirationDate) => {
-    console.log("Login called with user:", user, "and token:", token);
     setToken(token);
     setUserInfo(user);
 
@@ -49,7 +48,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     const storedData = JSON.parse(localStorage.getItem("userData"));
-    console.log("Restored data", storedData);
+    
 
     if (
       storedData &&

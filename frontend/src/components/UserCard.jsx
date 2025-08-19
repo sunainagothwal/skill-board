@@ -1,5 +1,5 @@
 import React from "react";
-import "./Styles.css";
+
 
 const UserCard = ({ users = [], onConnect }) => {
   return (

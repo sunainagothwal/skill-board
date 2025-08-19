@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../common/context/auth-context";  // ✅ use context
-import "./Styles.css";
+
 
 function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -24,7 +24,6 @@ function NavBar() {
   }, []);
 
 
- console.log("NavBar check:", isLoggedIn);
   const handleLogout = () => {
     logout();
     navigate("/");

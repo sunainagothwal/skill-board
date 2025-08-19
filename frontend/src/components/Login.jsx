@@ -14,7 +14,6 @@ const Login = ({ setShowLogin }) => {
   // where user came from, fallback home
   const from = location.state?.from?.pathname || "/";
 
-  console.log("Token in context after login:", token);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
