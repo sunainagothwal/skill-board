@@ -1,0 +1,11 @@
+{
+    "env":{
+        "DB_USER":"bhagirath",
+        "DB_PASSWORD":"bhagiraths",
+        "DB_NAME":"skillSwapDB",
+        "JWT_KEY":"supersecret_dont_share",
+        "EMAIL_USER":"bhagirathsheela001@gmail.com",
+        "EMAIL_PASS":"bhldanscykqugpci",
+        "FRONTEND_URL":"http://localhost:3000"
+    }
+}

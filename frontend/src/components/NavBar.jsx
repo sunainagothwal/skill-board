@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuthContext } from "../common/context/auth-context";  // ✅ use context
 import "./Styles.css";
 
 function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loggedInStatus = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(loggedInStatus);
-  }, [location]);
+  //shared context, not fresh hook
+  const {isLoggedIn, logout}= useAuthContext();  
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -25,18 +23,10 @@ function NavBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCreateSwapClick = (e) => {
-    e.preventDefault();
-    if (!isLoggedIn) {
-      navigate("/login", { state: { from: "/create-swap" } });
-    } else {
-      navigate("/create-swap");
-    }
-  };
 
+ console.log("NavBar check:", isLoggedIn);
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
+    logout();
     navigate("/");
   };
 
@@ -65,19 +55,16 @@ function NavBar() {
           </Link>
         </li>
         <li>
-          <a
-            href="/create-swap"
-            onClick={(e) => {
-              handleCreateSwapClick(e);
-              setMobileMenuOpen(false);
-            }}
-            className={
-              location.pathname === "/create-swap" ? "active-link" : ""
-            }
-          >
-            Create Swap
-          </a>
+            <Link
+                to="/create-swap"
+                onClick={() => setMobileMenuOpen(false)}
+                className={location.pathname === "/create-swap" ? "active-link" : ""}
+              >
+                Create Swap
+              </Link>
+
         </li>
+
         <li className="profile_dropdown" ref={dropdownRef}>
           <span
             className="profile_link"

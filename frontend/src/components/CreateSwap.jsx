@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import "./Styles.css";
 
 const CreateSwap = () => {
-  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [task, setTask] = useState("");
   const [desc, setDesc] = useState("");
   const [requirements, setRequirements] = useState("");
 
-  useEffect(() => {
+  //this is the culprit, wasted my half day
+  /* useEffect(() => {
     const loggedIn = localStorage.getItem("isLoggedIn") === "true";
     if (!loggedIn) {
       navigate("/login", { state: { from: "/create-swap" } });
     }
-  }, [navigate]);
+  }, [navigate]); */
 
   const submit = () => {
     if (!title || !task) return alert("Please add title and task");

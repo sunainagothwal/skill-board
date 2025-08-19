@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route,Navigate } from "react-router-dom";
 import NavBar from "./components/NavBar";
 // import HeroSection from "./components/HeroSection";
 import HowItWorks from "./components/HowItWorks";
@@ -8,6 +8,7 @@ import MyTask from "./components/MyTask";
 import Settings from "./components/Settings";
 import ProfileView from "./components/ProfileView";
 import LoginAndRegister from "./components/LoginAndRegistration";
+import PrivateRoute from "./PrivateRoute";
 
 function App() {
   const users = [
@@ -111,13 +112,12 @@ function App() {
           element={
             <>
               <UserCard users={users} />
-              {/* <HeroSection /> */}
               <HowItWorks />
             </>
           }
         />
         <Route path="/usercard" element={<UserCard users={users} />} />
-        <Route path="/create-swap" element={<CreateSwap />} />
+        <Route path="/create-swap" element={<PrivateRoute><CreateSwap /></PrivateRoute>} />
         <Route path="/settings" element={<Settings />} />
         <Route
           path="/profileview"
