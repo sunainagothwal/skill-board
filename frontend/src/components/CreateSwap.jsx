@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "./Styles.css";
 
 const CreateSwap = () => {
   const [title, setTitle] = useState("");
@@ -17,7 +16,7 @@ const CreateSwap = () => {
 
   const submit = () => {
     if (!title || !task) return alert("Please add title and task");
-    console.log({ title, task, desc, requirements });
+    
     setTitle("");
     setTask("");
     setDesc("");
