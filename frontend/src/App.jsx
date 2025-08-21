@@ -1,13 +1,13 @@
-import { Routes, Route,Navigate } from "react-router-dom";
-import NavBar from "./components/NavBar";
+import { Routes, Route, Navigate } from "react-router-dom";
+import NavBar from "./components/layout/NavBar";
 // import HeroSection from "./components/HeroSection";
-import HowItWorks from "./components/HowItWorks";
-import CreateSwap from "./components/CreateSwap";
-import UserCard from "./components/UserCard";
-import MyTask from "./components/MyTask";
-import Settings from "./components/Settings";
-import ProfileView from "./components/ProfileView";
-import LoginAndRegister from "./components/LoginAndRegistration";
+import HowItWorks from "./components/layout/HowItWorks";
+import CreateSwap from "./components/layout/CreateSwap";
+import UserCard from "./components/layout/UserCard";
+import MyTask from "./components/user/MyTask";
+import Settings from "./components/user/Settings";
+import ProfileView from "./components/user/ProfileView";
+import SignIn from "./components/auth/SignIn";
 import PrivateRoute from "./PrivateRoute";
 
 function App() {
@@ -117,7 +117,14 @@ function App() {
           }
         />
         <Route path="/usercard" element={<UserCard users={users} />} />
-        <Route path="/create-swap" element={<PrivateRoute><CreateSwap /></PrivateRoute>} />
+        <Route
+          path="/create-swap"
+          element={
+            <PrivateRoute>
+              <CreateSwap />
+            </PrivateRoute>
+          }
+        />
         <Route path="/settings" element={<Settings />} />
         <Route
           path="/profileview"
@@ -126,7 +133,7 @@ function App() {
           }
         />
         <Route path="/mytask" element={<MyTask />} />
-        <Route path="/login" element={<LoginAndRegister />} />
+        <Route path="/login" element={<SignIn />} />
       </Routes>
     </>
   );

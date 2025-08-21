@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuthContext } from "../common/context/auth-context";  // ✅ use context
+import { useAuthContext } from "../../common/context/auth-context.jsx";  // ✅ use context
 
 
 function NavBar() {
