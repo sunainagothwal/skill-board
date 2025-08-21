@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 
-
 const ProfileView = () => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -12,6 +11,7 @@ const ProfileView = () => {
     img: "https://randomuser.me/api/portraits/women/68.jpg",
     description: "No bio provided",
     email: "abc@gmail.com",
+    password: "123456789",
     phone: "",
   });
 
@@ -19,13 +19,23 @@ const ProfileView = () => {
   const [newTeachSkill, setNewTeachSkill] = useState("");
   const [newLearnSkill, setNewLearnSkill] = useState("");
 
-  // Input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEditUser({ ...editUser, [name]: value });
   };
 
-  // Add skills
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const imgUrl = URL.createObjectURL(file);
+      setEditUser({ ...editUser, img: imgUrl });
+    }
+  };
+
+  const handleDeleteImage = () => {
+    setEditUser({ ...editUser, img: "" });
+  };
+
   const addTeachSkill = () => {
     if (newTeachSkill.trim() !== "") {
       setEditUser({
@@ -46,7 +56,6 @@ const ProfileView = () => {
     }
   };
 
-  // Save changes
   const handleSave = () => {
     setStoredUser(editUser);
     setIsEditing(false);
@@ -55,7 +64,6 @@ const ProfileView = () => {
   return (
     <div className="profile_page">
       {!isEditing ? (
-        // ---------------- VIEW MODE ----------------
         <div>
           <div className="header_row">
             <h2>My Profile</h2>
@@ -64,16 +72,19 @@ const ProfileView = () => {
             </button>
           </div>
 
-          {/* Profile Information */}
           <div className="card">
             <h3>Profile Information</h3>
             <div className="profile_info_row">
               <div className="profile_img_container">
-                <img
-                  src={storedUser.img}
-                  alt={storedUser.name}
-                  className="profile_img"
-                />
+                {storedUser.img ? (
+                  <img
+                    src={storedUser.img}
+                    alt={storedUser.name}
+                    className="profile_img"
+                  />
+                ) : (
+                  <div className="profile_img_placeholder">No Image</div>
+                )}
               </div>
               <table className="info_table">
                 <tbody>
@@ -93,12 +104,15 @@ const ProfileView = () => {
                     <td className="label">Bio</td>
                     <td>{storedUser.description}</td>
                   </tr>
+                  <tr>
+                    <td className="label">Password</td>
+                    <td>{"*".repeat(storedUser.password.length)}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Skills I Can Teach */}
           <div className="card">
             <h3>Skills I Can Teach</h3>
             {storedUser.knows.length > 0 ? (
@@ -112,7 +126,6 @@ const ProfileView = () => {
             )}
           </div>
 
-          {/* Skills I Want to Learn */}
           <div className="card">
             <h3>Skills I Want to Learn</h3>
             {storedUser.wants.length > 0 ? (
@@ -127,11 +140,38 @@ const ProfileView = () => {
           </div>
         </div>
       ) : (
-        // ---------------- EDIT MODE ----------------
         <div>
           <h2>My Profile</h2>
 
-          {/* Basic Information */}
+          <div className="card">
+            <h3>Profile Image</h3>
+            <div className="profile_img_edit_container">
+              {editUser.img ? (
+                <img
+                  src={editUser.img}
+                  alt="preview"
+                  className="profile_img_edit"
+                />
+              ) : (
+                <div className="profile_img_edit">No Image</div>
+              )}
+              <div className="image_actions">
+                <label className="change_btn">
+                  Change
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
+                  />
+                </label>
+                <button onClick={handleDeleteImage} className="delete_btn_img">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="card">
             <h3>Basic Information</h3>
             <label>Display Name</label>
@@ -158,9 +198,17 @@ const ProfileView = () => {
               onChange={handleChange}
               placeholder="Tell others about yourself..."
             />
+
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              value={editUser.password}
+              onChange={handleChange}
+              placeholder="Enter new password"
+            />
           </div>
 
-          {/* Skills I Can Teach */}
           <div className="card">
             <h3>Skills I Can Teach</h3>
             <div className="skill_input">
@@ -179,7 +227,6 @@ const ProfileView = () => {
             </ul>
           </div>
 
-          {/* Skills I Want to Learn */}
           <div className="card">
             <h3>Skills I Want to Learn</h3>
             <div className="skill_input">
@@ -198,7 +245,6 @@ const ProfileView = () => {
             </ul>
           </div>
 
-          {/* Buttons */}
           <div className="edit_actions">
             <button onClick={() => setIsEditing(false)} className="cancel_btn">
               Cancel

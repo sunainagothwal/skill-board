@@ -1,7 +1,7 @@
 import React,{useState} from 'react'
 import { useNavigate } from "react-router-dom";
-import { useHttpClient } from "../common/hooks/http-hook";
-import { useAuth } from "../common/hooks/auth-hook";
+import { useHttpClient } from "../../common/hooks/http-hook.js";
+import { useAuth } from "../../common/hooks/auth-hook.js";
 
 const Signup = ({setShowLogin}) => {
   const [name, setName] = useState("");

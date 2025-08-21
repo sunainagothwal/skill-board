@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useHttpClient } from "../common/hooks/http-hook";
-import { useAuthContext } from "../common/context/auth-context";
+import { useHttpClient } from "../../common/hooks/http-hook.js";
+import { useAuthContext } from "../../common/context/auth-context.jsx";
 
 const Login = ({ setShowLogin }) => {
   const { sendRequest } = useHttpClient();
-  const { login, token } = useAuthContext(); // ✅ use only context
+  const { login, token } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
