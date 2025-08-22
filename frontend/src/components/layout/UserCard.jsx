@@ -3,7 +3,7 @@ import React from "react";
 
 const UserCard = ({ users = [], onConnect }) => {
   return (
-    <section className="page">
+    <section className="page ">
       <h2 className="section_title">People on SkillBoard</h2>
       <div className="user_list">
         {users.map((user, index) => (
