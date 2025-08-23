@@ -168,7 +168,6 @@ const login = async (req, res, next) => {
   //res.json({message: "Logged in!",user: existingUser.toObject({ getters: true }),});
 };
 
-// update user profile info
 const updateUser = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -176,49 +175,69 @@ const updateUser = async (req, res, next) => {
       new HttpError("Invalid inputs passed, please check your data.", 422)
     );
   }
+
   const userId = req.userData.userId;
-  //console.log("in user update", req.file.path);
+
   let existingUser;
   try {
-    //existingUser = await User.findOne(userId);
     existingUser = await User.findById(userId);
   } catch (err) {
-    const error = new HttpError("User not available to update, please try again later", 500);
-    return next(error);
-  }
-   //console.log(existingUser);
-  if (!existingUser) {
-    const error = new HttpError(
-      "User not found",
-      404
+    return next(
+      new HttpError("User not available to update, please try again later", 500)
     );
-    return next(error);
   }
-  //deleting the existing image of user before updating
-  const imagePath= existingUser.image
-  fs.unlink(imagePath,error=>{
-    console.log(error);
-  }) 
-  existingUser.image = req.file.path.replace(/\\/g, "/");;
-  //console.log(existingUser,"after image update")
+
+  if (!existingUser) {
+    return next(new HttpError("User not found", 404));
+  }
+
+  // 2️⃣ Update fields if provided
+  if (req.file && req.file.path) {
+    // Delete old image
+    const imagePath = existingUser.image;
+    fs.unlink(imagePath, (err) => {
+      if (err) console.log(err);
+    });
+
+    existingUser.image = req.file.path.replace(/\\/g, "/");
+  }
+
+  if (req.body.city !== undefined) existingUser.city = req.body.city;
+  if (req.body.bio !== undefined) existingUser.bio = req.body.bio;
+  if (req.body.offeredTask !== undefined)
+    existingUser.offeredTask = Array.isArray(req.body.offeredTask)
+      ? req.body.offeredTask
+      : [req.body.offeredTask];
+  if (req.body.requestedTask !== undefined)
+    existingUser.requestedTask = Array.isArray(req.body.requestedTask)
+      ? req.body.requestedTask
+      : [req.body.requestedTask];
+
+  // Optional: allow updating name or phone if needed
+  if (req.body.name !== undefined) existingUser.name = req.body.name;
+  if (req.body.phone !== undefined) existingUser.phone = req.body.phone;
+
+  // 3️⃣ Save the user
   try {
     await existingUser.save();
   } catch (err) {
-    const error = new HttpError(
-      "Updating user failed, please try again later",
-      500
+    return next(
+      new HttpError("Updating user failed, please try again later", 500)
     );
-    return next(error);
   }
 
-
-  res.status(201).json({
+  // 4️⃣ Send response
+  res.status(200).json({
     userId: existingUser.id,
     email: existingUser.email,
     name: existingUser.name,
+    city: existingUser.city,
+    bio: existingUser.bio,
+    offeredTask: existingUser.offeredTask,
+    requestedTask: existingUser.requestedTask,
+    image: existingUser.image,
+    phone: existingUser.phone,
   });
-
-  // res.status(201).json({ user: createdUser.toObject({ getters: true }) });
 };
 const getUserInfo = async (req, res, next) => {
   const userId = req.params.uid;
@@ -249,29 +268,7 @@ const getUserInfo = async (req, res, next) => {
   res.status(201).json({userInfo});
 
 };
-const getWinnerInfo = async (req, res, next) => {
-  let winnerInfo
-  try {
-     winnerInfo = await Result.findOne({}).sort({ createdAt: -1 });
 
-  } catch (err) {
-    const error = new HttpError(
-      "Winner not found, please try again later",
-      500
-    );
-    return next(error);
-  }
-  if (!winnerInfo) {
-    const error = new HttpError("Winner not found", 404);
-    return next(error);
-  }
-  const finalWinnerInfo = {
-    winnerNumber: winnerInfo.winnerNumber,
-    winners: winnerInfo.winners,
-  };
-
-  res.status(201).json(finalWinnerInfo);
-};
 const sendRestEmail = async (req, res, next) => {
   const emailToSendLink = req.body.email;
   let existingUser;
@@ -366,6 +363,5 @@ exports.signup = signup;
 exports.login = login;
 exports.updateUser = updateUser;
 exports.getUserInfo = getUserInfo;
-exports.getWinnerInfo = getWinnerInfo;
 exports.sendRestEmail = sendRestEmail;
 exports.updatePassword = updatePassword;

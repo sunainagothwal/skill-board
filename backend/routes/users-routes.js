@@ -16,7 +16,6 @@ router.post(
   ],usersController.signup
 );
 router.post("/login", usersController.login);
-router.get("/getWinner", usersController.getWinnerInfo);
 router.post("/reset-password", usersController.sendRestEmail);
 router.post("/new-password", usersController.updatePassword);
 router.get("/:uid", usersController.getUserInfo);

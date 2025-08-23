@@ -1,27 +1,35 @@
-import {useCallback } from 'react';
+import { useCallback } from "react";
 import { useLoader } from "../context/LoaderContext.jsx";
-import { useNotification } from "../context/NotificationContext";
+import { showError } from "../toastHelper.js";
 
 export const useHttpClient = () => {
-  //const [isLoading, setIsLoading] = useState(false);
-  //const [error, setError] = useState();
   const { setLoading } = useLoader();
-  const { showError } = useNotification();
 
   const sendRequest = useCallback(
-    async (url, method = 'GET', body = null, headers = {}) => {
+    async (url, method = "GET", body = null, headers = {}) => {
       setLoading(true);
       try {
+        let requestHeaders = { ...headers };
+        let requestBody = body;
+
+        // Only stringify if body is NOT FormData and NOT already a string
+        if (body && !(body instanceof FormData) && typeof body !== "string") {
+          requestBody = JSON.stringify(body);
+          if (!requestHeaders["Content-Type"]) {
+            requestHeaders["Content-Type"] = "application/json";
+          }
+        }
+
         const response = await fetch(url, {
           method,
-          body,
-          headers
+          body: method !== "GET" && method !== "HEAD" ? requestBody : null,
+          headers: requestHeaders,
         });
 
         const responseData = await response.json();
 
         if (!response.ok) {
-          throw new Error(responseData.message);
+          throw new Error(responseData.message || "Request failed!");
         }
 
         setLoading(false);
@@ -32,7 +40,7 @@ export const useHttpClient = () => {
         throw err;
       }
     },
-    []
+    [setLoading]
   );
 
   return { sendRequest };

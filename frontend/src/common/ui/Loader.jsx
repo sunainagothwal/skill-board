@@ -4,7 +4,6 @@ import { useLoader } from "../context/LoaderContext.jsx";
 
 const Loader = () => {
   const { loading } = useLoader();
-
   if (!loading) return null;
 
   return (

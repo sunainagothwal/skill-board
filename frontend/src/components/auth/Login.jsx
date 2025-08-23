@@ -5,7 +5,7 @@ import { useAuthContext } from "../../common/context/auth-context.jsx";
 
 const Login = ({ setShowLogin }) => {
   const { sendRequest } = useHttpClient();
-  const { login, token } = useAuthContext();
+  const { login } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();

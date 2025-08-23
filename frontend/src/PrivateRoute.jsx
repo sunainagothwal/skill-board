@@ -1,30 +1,25 @@
+import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "./common/context/auth-context";
+import { useLoader } from "./common/context/LoaderContext.jsx";
 
 const PrivateRoute = ({ children }) => {
-  const { isLoggedIn, isAuthReady, userInfo, token } = useAuthContext();
+  const { isLoggedIn, isAuthReady } = useAuthContext();
+  const { setLoading } = useLoader();
   const location = useLocation();
-  
-  console.log(" PrivateRoute check:", {
-    isLoggedIn,
-    isAuthReady,
-    token,
-    userInfo,
-    location: location.pathname
-  });
+
+  // Only update loader after render
+  useEffect(() => {
+    setLoading(!isAuthReady);
+  }, [isAuthReady, setLoading]);
 
   if (!isAuthReady) {
-    return <div>Loading...</div>;
+    // Render nothing because loader is already showing
+    return null;
   }
 
   if (!isLoggedIn) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: location }} 
-      />
-    );
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   return children;
