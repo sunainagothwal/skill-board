@@ -100,7 +100,7 @@ const getAllTasks = async (req, res, next) => {
   let tasks;
   try {
     tasks = await Task.find()
-      .populate("creator", "name") // only get creator's name
+      .populate("creator", "name image") // only get creator's name
       .select(
         "title description requestedTask offeredTask location attachments deadline creator"
       );
@@ -122,7 +122,10 @@ const getAllTasks = async (req, res, next) => {
     location: task.location,
     attachments: task.attachments,
     deadline: task.deadline,
-    creator: task.creator?.name || "Unknown",
+    creator: {
+      name: task.creator?.name || "Unknown",
+      image: task.creator?.image || null,
+    },
   }));
 
   res.json({ tasks: transformedTasks });
