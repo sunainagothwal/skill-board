@@ -26,26 +26,6 @@ const CreateSwap = () => {
     deadline: "",
   });
 
-  React.useEffect(() => {
-
-    const getAllTasks = async () => {
-      try {
-        const responseData = await sendRequest(
-          `${import.meta.env.VITE_APP_BACKEND_URL}/tasks`
-        );
-        if (responseData) {
-          console.log(responseData);
-          console.log(
-            responseData.tasks.map((task) => formatUTCToLocal(task.deadline,false))
-          );
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    getAllTasks();
-  }, []);
   
   const validate = () => {
     const newErrors = {};
