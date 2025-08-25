@@ -33,7 +33,6 @@ function NavBar() {
     <nav className="navbar">
       <div className="logo-section">
         <span className="logo">SkillBoard</span>
-        <span className="tagline">by Sunaina</span>
       </div>
 
       <div
