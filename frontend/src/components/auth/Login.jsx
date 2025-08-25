@@ -14,7 +14,6 @@ const Login = ({ setShowLogin }) => {
   // where user came from, fallback home
   const from = location.state?.from?.pathname || "/";
 
-
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -27,7 +26,7 @@ const Login = ({ setShowLogin }) => {
 
       if (responseData?.token) {
         // save in context
-        login(responseData, responseData.token); 
+        login(responseData, responseData.token);
         navigate(from, { replace: true });
       }
     } catch (err) {
@@ -78,6 +77,17 @@ const Login = ({ setShowLogin }) => {
           onClick={() => setShowLogin(false)}
         >
           Don&apos;t have an account? Register
+        </span>
+      </div>
+      <div className="login_links">
+        <span style={{ color: "#555" }}>
+          Forgot Password?{" "}
+          <span
+            style={{ cursor: "pointer", color: "#0066cc" }}
+            onClick={() => alert("Forgot Password")}
+          >
+            Click Here
+          </span>
         </span>
       </div>
     </div>
