@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useHttpClient } from "../../common/hooks/http-hook.js";
 import { useAuthContext } from "../../common/context/auth-context.jsx";
-import { useLayout } from "../../common/context/LayoutContext";
+import { usePopup } from "../../common/context/PopupContext.jsx";
 import ResetPwdPopupForm from "./ResetPwdPopupForm";
 
 const Login = ({ setShowLogin }) => {
@@ -12,7 +12,7 @@ const Login = ({ setShowLogin }) => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-   const { openPopup } = useLayout();
+  const { openPopup } = usePopup();
   const from = location.state?.from?.pathname || "/";
 
   const handleLoginSubmit = async (e) => {
@@ -35,7 +35,6 @@ const Login = ({ setShowLogin }) => {
   };
 
    const handleResetClick = () => {
-    console.log(" clicked")
     openPopup("pwdResetPopup", {
       title: "Reset Password",
       body: <ResetPwdPopupForm />,

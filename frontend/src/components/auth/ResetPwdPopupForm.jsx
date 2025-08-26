@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useHttpClient } from "../../common/hooks/http-hook";
-import { useLayout } from "../../common/context/LayoutContext";
+import { usePopup } from "../../common/context/PopupContext";
 import { showSuccess,showError } from "../../common/toastHelper";
 const ResetPwdPopupForm = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const { sendRequest } = useHttpClient();
-  const { closePopup } = useLayout();
+  const { closePopup } = usePopup();
   const validateEmail = (email) =>
     /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/.test(email);
 

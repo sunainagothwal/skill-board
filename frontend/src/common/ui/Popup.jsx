@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
-import { useLayout } from "../context/LayoutContext";
+import { usePopup } from "../context/PopupContext";
 //import { FaTimes } from "react-icons/fa";
 
 const Popup = () => {
-  const { popup, closePopup } = useLayout();
+  const { popup, closePopup } = usePopup();
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -13,7 +13,15 @@ const Popup = () => {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [closePopup]);
-
+ 
+  useEffect(() => {
+    const rootEl = document.getElementById("root");
+    if (popup) {
+      rootEl.classList.add('blur-background');
+    } else {
+      rootEl.classList.remove('blur-background');
+    }
+  }, [popup]);
   if (!popup) return null;
 
   const { title, body } = popup;

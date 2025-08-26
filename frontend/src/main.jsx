@@ -7,21 +7,21 @@ import { AuthProvider } from "./common/context/auth-context.jsx";
 import Loader from "./common/ui/Loader.jsx";
 import { LoaderProvider } from "./common/context/LoaderContext.jsx";
 import { Toaster } from "react-hot-toast";
-import { LayoutProvider } from "./common/context/LayoutContext.jsx";
+import { PopupProvider } from "./common/context/PopupContext.jsx";
 import Popup from "./common/ui/Popup.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <LoaderProvider>
       <BrowserRouter>
-        <LayoutProvider>
+        <PopupProvider>
           <AuthProvider>
             <App />
             <Toaster position="top-center" />
             <Loader />
             <Popup />
           </AuthProvider>
-        </LayoutProvider>
+        </PopupProvider>
       </BrowserRouter>
     </LoaderProvider>
   </React.StrictMode>

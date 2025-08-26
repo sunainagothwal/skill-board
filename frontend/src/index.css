@@ -993,3 +993,7 @@ button.btn {
 .footer-banner button:hover {
   background-color: #f0f0f0;
 }
+.blur-background {
+  filter: blur(2px);
+  transition: filter 0.3s ease-in-out;
+}

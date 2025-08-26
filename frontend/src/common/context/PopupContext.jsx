@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState } from "react";
 
-const LayoutContext = createContext();
+const PopupContext = createContext();
 
-export const LayoutProvider = ({ children }) => {
+export const PopupProvider = ({ children }) => {
   const [popup, setPopup] = useState(null);
 
   const openPopup = (id, data) => {
@@ -15,10 +15,10 @@ export const LayoutProvider = ({ children }) => {
   };
 
   return (
-    <LayoutContext.Provider value={{ popup, openPopup, closePopup }}>
+    <PopupContext.Provider value={{ popup, openPopup, closePopup }}>
       {children}
-    </LayoutContext.Provider>
+    </PopupContext.Provider>
   );
 };
 
-export const useLayout = () => useContext(LayoutContext);
+export const usePopup = () => useContext(PopupContext);
