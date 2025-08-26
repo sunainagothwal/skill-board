@@ -11,6 +11,11 @@ const taskSchema = new Schema(
     location: { type: String, required: true },
     attachments: { type: String }, // or use Buffer if storing files
     deadline: { type: Date, required: true },
+    status: {
+      type: String,
+      enum: ["open", "in-progress", "completed", "cancelled"],
+      default: "open",
+    },
     creator: { type: mongoose.Types.ObjectId, required: true, ref: "User" },
   },
   { timestamps: true }

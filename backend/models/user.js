@@ -11,8 +11,9 @@ const userSchema = new Schema(
     bio: { type: String, default: "No bio provided" },
     phone: { type: String, default: "" },
     offeredTask: [{ type: String }], // array of offered task strings
-    requestedTask: [{ type: String }], // array of requested task strings
-    tasks: [{ type: mongoose.Types.ObjectId, ref: "Task" }], // existing
+    requestedTask: [{ type: String }],
+    tasks: [{ type: mongoose.Types.ObjectId, ref: "Task" }],
+    isVerified: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

@@ -15,8 +15,9 @@ router.post(
     check("password").isLength({ min: 6 }),
   ],usersController.signup
 );
+router.get("/confirm-signup-email/:token", usersController.confirmSignupEmail);
 router.post("/login", usersController.login);
-router.post("/reset-password", usersController.sendRestEmail);
+router.post("/reset-password", usersController.sendResetEmail);
 router.post("/new-password", usersController.updatePassword);
 router.get("/:uid", usersController.getUserInfo);
 router.use(checkAuth);
@@ -24,6 +25,5 @@ router.patch(
   "/updateUser",
   fileUpload.single("image"),
   usersController.updateUser
-); 
-
-module.exports=router
+);
+module.exports = router;

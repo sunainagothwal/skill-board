@@ -481,7 +481,7 @@ button.btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 78vh;
+ /*  height: 78vh; */
 }
 
 .login_container {
@@ -492,6 +492,10 @@ button.btn {
   width: 100%;
   max-width: 400px;
   height: 90%;
+}
+.shadow-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
 }
 
 .login_title {

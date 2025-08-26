@@ -32,79 +32,102 @@ const getUsers = async (req, res, next) => {
   //res.json({ users });
 };
 
+// signup.js
 const signup = async (req, res, next) => {
   const { name, email, password } = req.body;
 
-  //const hasUser = DUMMY_USERS.find(u => u.email === email);
   let existingUser;
   try {
     existingUser = await User.findOne({ email });
   } catch (err) {
-    const error = new HttpError("Signup failed, please try again later", 500);
-    return next(error);
+    return next(new HttpError("Signup failed, please try again later", 500));
   }
 
   if (existingUser) {
-    const error = new HttpError(
-      "User already exists, Please try with different credentials",
-      422
-    );
-    return next(error);
+    return next(new HttpError("User already exists, try with different credentials", 422));
   }
 
   let hashedPassword;
   try {
     hashedPassword = await bcrypt.hash(password, 12);
   } catch (err) {
-    const error = new HttpError(
-      "Could not create user, please try again.",
-      500
-    );
-    return next(error);
+    return next(new HttpError("Could not create user, please try again.", 500));
   }
 
-  const createdUser = new User(
-    {
-      name,
-      email,
-      password: hashedPassword,
-      image: "uploads/images/default_avatar.png",
-      places: [],
-      bets: [],
-    });
+  const createdUser = new User({
+    name,
+    email,
+    password: hashedPassword,
+    image: "uploads/images/default_avatar.png",
+    isVerified: false, // Initially false until user confirms email
+  });
 
   try {
     await createdUser.save();
   } catch (err) {
-    const error = new HttpError(
-      "Creating user failed, please try again later",
-      500
-    );
-    return next(error);
+    return next(new HttpError("Creating user failed, please try again later", 500));
   }
- 
-  
-  let token;
+
+  // Generate confirmation token (expires in 24h)
+  const confirmToken = jwt.sign(
+    { userId: createdUser.id, email: createdUser.email },
+    process.env.JWT_KEY,
+    { expiresIn: "24h" }
+  );
+
+  // Confirmation link
+  const confirmLink = `${process.env.FRONTEND_URL}/confirm-signup?token=${confirmToken}`;
+
+  // Send confirmation email
+  const emailOptions = {
+    to: createdUser.email,
+    subject: "Confirm Your Account - SwapTask",
+    html: `
+      <div style="font-family: Arial, sans-serif; text-align:center;">
+        <h2>Welcome to SwapTask, ${createdUser.name} 🎉</h2>
+        <p>Click below to confirm your account:</p>
+        <a href="${confirmLink}" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#28a745; color:white; text-decoration:none; border-radius:5px;">Confirm Account</a>
+        <p>This link will expire in 24 hours.</p>
+      </div>
+    `,
+  };
+
   try {
-    token = jwt.sign(
-      { userId: createdUser.id, email: createdUser.email },
-      process.env.JWT_KEY,
-      { expiresIn: "24h" }
-    );
+    await sendEmail(emailOptions);
   } catch (err) {
-    const error = new HttpError(
-      "Signing up failed, please try again later.",
-      500
-    );
-    return next(error);
+    return next(new HttpError("Could not send confirmation email, try again later", 500));
   }
 
-  res
-    .status(201)
-    .json({ userId: createdUser.id, email: createdUser.email,name:createdUser.name, token: token });
+  res.status(201).json({ message: "Signup successful! Please check your email to confirm your account." });
+};
 
+// confirmSignupEmail.js
+const confirmSignupEmail = async (req, res, next) => {
+  const { token } = req.params;
+  console.log(req.query,req.params)
+  if (!token) {
+    return next(new HttpError("Invalid confirmation link", 400));
+  }
 
- // res.status(201).json({ user: createdUser.toObject({ getters: true }) });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_KEY);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return next(new HttpError("User not found", 404));
+    }
+
+    if (user.isVerified) {
+      return res.status(200).json({ message: "Account already confirmed!" });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    res.status(200).json({ message: "Account confirmed successfully!" });
+  } catch (err) {
+    return next(new HttpError("Confirmation link is invalid or expired", 400));
+  }
 };
 
 const login = async (req, res, next) => {
@@ -269,7 +292,7 @@ const getUserInfo = async (req, res, next) => {
 
 };
 
-const sendRestEmail = async (req, res, next) => {
+const sendResetEmail = async (req, res, next) => {
   const emailToSendLink = req.body.email;
   let existingUser;
   try {
@@ -285,7 +308,6 @@ const sendRestEmail = async (req, res, next) => {
     const error = new HttpError("User not found with this email", 404);
     return next(error);
   }
-  console.log(existingUser);
   token = jwt.sign(
     { name: existingUser.name, email: existingUser.email },
     process.env.JWT_KEY,
@@ -360,8 +382,9 @@ const updatePassword = async (req, res, next) => {
 };
 exports.getUsers = getUsers;
 exports.signup = signup;
+exports.confirmSignupEmail = confirmSignupEmail;
 exports.login = login;
 exports.updateUser = updateUser;
 exports.getUserInfo = getUserInfo;
-exports.sendRestEmail = sendRestEmail;
+exports.sendResetEmail = sendResetEmail;
 exports.updatePassword = updatePassword;

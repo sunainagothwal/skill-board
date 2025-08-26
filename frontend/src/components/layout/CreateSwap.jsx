@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useHttpClient } from "../../common/hooks/http-hook.js";
 import { showSuccess } from "../../common/toastHelper";
 import { useAuthContext } from "../../common/context/auth-context.jsx"; 
-import { formatUTCToLocal } from "../../common/utils";
 
 const CreateSwap = () => {
   const { sendRequest } = useHttpClient();
