@@ -22,8 +22,6 @@ const createTask = async (req, res, next) => {
     attachments: filePath,
     creator: req.userData.userId,
   });
-  console.log(createdTask);
-  //console.log(req.body);
   let user;
   try {
     user = await User.findById(req.userData.userId);
@@ -102,7 +100,7 @@ const getAllTasks = async (req, res, next) => {
     tasks = await Task.find()
       .populate("creator", "name image") // only get creator's name
       .select(
-        "title description requestedTask offeredTask location attachments deadline creator"
+        "title description requestedTask offeredTask location attachments deadline creator createdAt"
       );
   } catch (err) {
     const error = new HttpError("Fetching tasks failed", 500);
@@ -122,6 +120,7 @@ const getAllTasks = async (req, res, next) => {
     location: task.location,
     attachments: task.attachments,
     deadline: task.deadline,
+    createdAt: task.createdAt,
     creator: {
       name: task.creator?.name || "Unknown",
       image: task.creator?.image || null,
