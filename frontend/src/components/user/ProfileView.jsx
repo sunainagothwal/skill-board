@@ -32,10 +32,6 @@ const ProfileView = () => {
     }
   };
 
-  const handleDeleteImage = () => {
-    setEditUser({ ...editUser, img: "" });
-  };
-
   const addTeachSkill = () => {
     if (newTeachSkill.trim() !== "") {
       setEditUser({
@@ -104,10 +100,6 @@ const ProfileView = () => {
                     <td className="label">Bio</td>
                     <td>{storedUser.description}</td>
                   </tr>
-                  <tr>
-                    <td className="label">Password</td>
-                    <td>{"*".repeat(storedUser.password.length)}</td>
-                  </tr>
                 </tbody>
               </table>
             </div>
@@ -144,7 +136,6 @@ const ProfileView = () => {
           <h2>My Profile</h2>
 
           <div className="card">
-            <h3>Profile Image</h3>
             <div className="profile_img_edit_container">
               {editUser.img ? (
                 <img
@@ -155,20 +146,13 @@ const ProfileView = () => {
               ) : (
                 <div className="profile_img_edit">No Image</div>
               )}
-              <div className="image_actions">
-                <label className="change_btn">
-                  Change
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                <button onClick={handleDeleteImage} className="delete_btn_img">
-                  Delete
-                </button>
-              </div>
+              <label className="upload_btn">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </label>
             </div>
           </div>
 
@@ -198,15 +182,6 @@ const ProfileView = () => {
               onChange={handleChange}
               placeholder="Tell others about yourself..."
             />
-
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={editUser.password}
-              onChange={handleChange}
-              placeholder="Enter new password"
-            />
           </div>
 
           <div className="card">
@@ -218,11 +193,21 @@ const ProfileView = () => {
                 onChange={(e) => setNewTeachSkill(e.target.value)}
                 placeholder="Add a skill you can teach..."
               />
-              <button onClick={addTeachSkill}>Add</button>
+              <button onClick={addTeachSkill} className="add_btn">
+                +
+              </button>
             </div>
-            <ul>
+            <ul className="skills_list">
               {editUser.knows.map((skill, idx) => (
-                <li key={idx}>{skill}</li>
+                <li key={idx} className="skill_item">
+                  {skill}
+                  <button
+                    className="remove_skill_btn"
+                    onClick={() => removeTeachSkill(idx)}
+                  >
+                    ✕
+                  </button>
+                </li>
               ))}
             </ul>
           </div>
@@ -236,11 +221,21 @@ const ProfileView = () => {
                 onChange={(e) => setNewLearnSkill(e.target.value)}
                 placeholder="Add a skill you want to learn..."
               />
-              <button onClick={addLearnSkill}>Add</button>
+              <button onClick={addTeachSkill} className="add_btn">
+                +
+              </button>
             </div>
-            <ul>
-              {editUser.wants.map((skill, idx) => (
-                <li key={idx}>{skill}</li>
+            <ul className="skills_list">
+              {editUser.knows.map((skill, idx) => (
+                <li key={idx} className="skill_item">
+                  {skill}
+                  <button
+                    className="remove_skill_btn"
+                    onClick={() => removeTeachSkill(idx)}
+                  >
+                    ✕
+                  </button>
+                </li>
               ))}
             </ul>
           </div>

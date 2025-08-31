@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuthContext } from "../../common/context/auth-context.jsx";  // ✅ use context
-
+import { useAuthContext } from "../../common/context/auth-context.jsx"; // ✅ use context
+import { FaUser } from "react-icons/fa";
 
 function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -11,7 +11,7 @@ function NavBar() {
   const navigate = useNavigate();
 
   //shared context, not fresh hook
-  const {isLoggedIn, logout}= useAuthContext();  
+  const { isLoggedIn, logout } = useAuthContext();
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -22,7 +22,6 @@ function NavBar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   const handleLogout = () => {
     logout();
@@ -53,14 +52,15 @@ function NavBar() {
           </Link>
         </li>
         <li>
-            <Link
-                to="/create-swap"
-                onClick={() => setMobileMenuOpen(false)}
-                className={location.pathname === "/create-swap" ? "active-link" : ""}
-              >
-                Create Swap
-              </Link>
-
+          <Link
+            to="/create-swap"
+            onClick={() => setMobileMenuOpen(false)}
+            className={
+              location.pathname === "/create-swap" ? "active-link" : ""
+            }
+          >
+            Create Swap
+          </Link>
         </li>
 
         <li className="profile_dropdown" ref={dropdownRef}>
@@ -69,6 +69,9 @@ function NavBar() {
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
             Account
+            <div className="profile_icon">
+              <FaUser />
+            </div>
           </span>
           {dropdownOpen && (
             <div className="dropdown">
@@ -78,19 +81,33 @@ function NavBar() {
                     className="drop_item"
                     onClick={() => setDropdownOpen(false)}
                   >
-                    <Link to="/profileview">Profile</Link>
+                    <Link to="/profileview" className="dropdown-text">
+                      Profile
+                    </Link>
                   </div>
                   <div
                     className="drop_item"
                     onClick={() => setDropdownOpen(false)}
                   >
-                    <Link to="/mytask">My Task</Link>
+                    <Link to="/mytask" className="dropdown-text">
+                      My Task
+                    </Link>
                   </div>
                   <div
                     className="drop_item"
                     onClick={() => setDropdownOpen(false)}
                   >
-                    <Link to="/settings">Settings</Link>
+                    <Link to="/change_password" className="dropdown-text">
+                      Change Password
+                    </Link>
+                  </div>
+                  <div
+                    className="drop_item"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <Link to="/settings" className="dropdown-text">
+                      Settings
+                    </Link>
                   </div>
                   <div className="drop_item" onClick={handleLogout}>
                     Logout
@@ -101,7 +118,9 @@ function NavBar() {
                   className="drop_item"
                   onClick={() => setDropdownOpen(false)}
                 >
-                  <Link to="/login">Login / Signup</Link>
+                  <Link to="/login" className="dropdown-text">
+                    Login / Signup
+                  </Link>
                 </div>
               )}
             </div>

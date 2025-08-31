@@ -1,10 +1,21 @@
 import { useState } from "react";
+import { usePopup } from "../../common/context/PopupContext.jsx";
+import DeleteAccountPopupForm from "../auth/DeleteAccountPopupForm";
 
 function Settings() {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [profileVisibility, setProfileVisibility] = useState("public");
-  const [language, setLanguage] = useState("en");
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const { openPopup } = usePopup();
+
+  //const [language, setLanguage] = useState("en");
+
+  const handleDelete = () => {
+    openPopup("DeleteAccountPopup", {
+      title: "Delete Account",
+      body: <DeleteAccountPopupForm />,
+    });
+  };
 
   return (
     <div className="settings-container">
@@ -26,18 +37,6 @@ function Settings() {
       </div>
 
       <div className="settings-section">
-        <h3>Privacy</h3>
-        <select
-          value={profileVisibility}
-          onChange={(e) => setProfileVisibility(e.target.value)}
-        >
-          <option value="public">Public Profile</option>
-          <option value="private">Private Profile</option>
-          <option value="friends">Friends Only</option>
-        </select>
-      </div>
-
-      <div className="settings-section">
         <h3>Notifications</h3>
         <label className="settings-option">
           Enable Email Notifications
@@ -52,7 +51,7 @@ function Settings() {
         </label>
       </div>
 
-      <div className="settings-section">
+      {/* <div className="settings-section">
         <h3>Language</h3>
         <select value={language} onChange={(e) => setLanguage(e.target.value)}>
           <option value="en">English</option>
@@ -60,11 +59,16 @@ function Settings() {
           <option value="de">German</option>
           <option value="fr">French</option>
         </select>
-      </div>
+      </div> */}
 
       <div className="settings-section">
         <h3>Account</h3>
-        <button className="delete-btn">Delete Account</button>
+        <label className="settings-option">
+          Manage your account settings
+          <button className="delete-btn" onClick={handleDelete}>
+            Delete Account
+          </button>
+        </label>
       </div>
     </div>
   );
