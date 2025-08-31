@@ -2,20 +2,10 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
-const { v4: uuidv4 } = require("uuid");
 const HttpError = require("../models/http-error");
 
 const User = require("../models/user");
-const { sendEmail } = require("../utils/email"); 
-const DUMMY_USERS = [
-  {
-    id: "u1",
-    name: "bhagi",
-    email: "test@test.com",
-    password: "testers",
-  },
-];
-
+const { sendEmail } = require("../utils/email");
 const getUsers = async (req, res, next) => {
   let users;
   try {
@@ -104,7 +94,6 @@ const signup = async (req, res, next) => {
 // confirmSignupEmail.js
 const confirmSignupEmail = async (req, res, next) => {
   const { token } = req.params;
-  console.log(req.query,req.params)
   if (!token) {
     return next(new HttpError("Invalid confirmation link", 400));
   }
@@ -132,63 +121,80 @@ const confirmSignupEmail = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
+
   let existingUser;
   try {
     existingUser = await User.findOne({ email });
   } catch (err) {
-    const error = new HttpError("Login failed, please try again later", 500);
-    return next(error);
+    return next(new HttpError("Login failed, please try again later", 500));
   }
 
   if (!existingUser) {
-    const error = new HttpError(
-      "Invalid credentials, please try again later",
-      500
-    );
-    return next(error);
+    return next(new HttpError("Invalid credentials", 403));
   }
 
-  let isValidPassword = false;
+  let isValidPassword;
   try {
     isValidPassword = await bcrypt.compare(password, existingUser.password);
   } catch (err) {
-    const error = new HttpError(
-      "Could not log you in, please check your credentials and try again.",
-      500
-    );
-    return next(error);
-  }
-  if (!isValidPassword) {
-    const error = new HttpError(
-      "Invalid credentials, could not log you in.",
-      403
-    );
-    return next(error);
+    return next(new HttpError("Could not log you in", 500));
   }
 
+  if (!isValidPassword) {
+    return next(new HttpError("Invalid credentials", 403));
+  }
+
+  // Create JWT with userId, name, email
   let token;
   try {
     token = jwt.sign(
-      { userId: existingUser.id, email: existingUser.email },
+      {
+        userId: existingUser.id,
+        name: existingUser.name,
+        email: existingUser.email,
+      },
       process.env.JWT_KEY,
       { expiresIn: "24h" }
     );
   } catch (err) {
-    const error = new HttpError(
-      "Logging in failed, please try again later.",
-      500
-    );
-    return next(error);
+    return next(new HttpError("Logging in failed", 500));
   }
 
-  res.json({
-    userId: existingUser.id,
-    email: existingUser.email,
-    name:existingUser.name,
-    token: token,
+  // Set secure cookie, do NOT send token or user info in body
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 1 * 60 * 60 * 1000,
   });
 
+  // Minimal response, no user details
+  res.status(200).json({ message: "Login successful" });
   //res.json({message: "Logged in!",user: existingUser.toObject({ getters: true }),});
+};
+
+const getCurrentUser = async (req, res, next) => {
+  const { userId } = req.userData; // Decoded from JWT
+
+  try {
+    const user = await User.findById(userId).select("name email");
+    if (!user) return next(new HttpError("User not found", 404));
+
+    res.status(200).json({ user: user.toObject({ getters: true }) });
+  } catch (err) {
+    return next(new HttpError("Fetching user failed", 500));
+  }
+};
+
+const logout = (req, res, next) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // only in prod
+    sameSite: "strict",
+    path: "/",
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
 };
 
 const updateUser = async (req, res, next) => {
@@ -380,6 +386,33 @@ const updatePassword = async (req, res, next) => {
   }
   res.status(200).json({ message: "Password updated successfully!" });
 };
+
+const deleteUser = async (req, res, next) => {
+  const { password } = req.body;
+  const { email } = req.userData;
+  console.log(req.body, req.userData)
+  try {
+    // 1. Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) {
+      return next(new HttpError("User not found", 404));
+    }
+
+    // 2. Match password
+    const isValidPassword = await bcrypt.compare(password, existingUser.password);
+    if (!isValidPassword) {
+      return next(new HttpError("Invalid email or password", 401));
+    }
+
+    // 3. Delete user
+    await User.deleteOne({ _id: existingUser._id });
+
+    res.status(200).json({ message: "User account deleted successfully" });
+  } catch (err) {
+    return next(new HttpError("Deleting user failed, please try again", 500));
+  }
+};
+
 exports.getUsers = getUsers;
 exports.signup = signup;
 exports.confirmSignupEmail = confirmSignupEmail;
@@ -388,3 +421,7 @@ exports.updateUser = updateUser;
 exports.getUserInfo = getUserInfo;
 exports.sendResetEmail = sendResetEmail;
 exports.updatePassword = updatePassword;
+exports.getCurrentUser = getCurrentUser;
+exports.logout = logout;
+exports.deleteUser = deleteUser;
+

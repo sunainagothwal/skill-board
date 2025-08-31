@@ -8,20 +8,22 @@ const PrivateRoute = ({ children }) => {
   const { setLoading } = useLoader();
   const location = useLocation();
 
-  // Only update loader after render
+  // Show loader until auth check is done
   useEffect(() => {
     setLoading(!isAuthReady);
   }, [isAuthReady, setLoading]);
 
   if (!isAuthReady) {
-    // Render nothing because loader is already showing
+    // Wait until auth check completes
     return null;
   }
 
   if (!isLoggedIn) {
+    // Redirect to login if not authenticated
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  // User is logged in, render the protected content
   return children;
 };
 

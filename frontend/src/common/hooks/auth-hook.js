@@ -1,75 +1,55 @@
-import { useState, useCallback, useEffect } from 'react';
-
-let logoutTimer;
+import { useState, useCallback, useEffect } from "react";
+import { useHttpClient } from "./http-hook";
 
 export const useAuth = () => {
-  const [token, setToken] = useState(null); 
-  const [tokenExpirationTimer, setTokenExpirationTimer] = useState(null);
-  const [userInfo, setUserInfo] = useState(null);
+  const { sendRequest } = useHttpClient();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
-  const login = useCallback((user, token, expirationDate) => {
-    setToken(token);
-    setUserInfo(user);
-
-    const tokenExpirationDate =
-      expirationDate || new Date(new Date().getTime() + 1000 * 60 * 60 * 24);
-
-    setTokenExpirationTimer(tokenExpirationDate);
-
-    localStorage.setItem(
-      "userData",
-      JSON.stringify({
-        user,
-        token,
-        expiration: tokenExpirationDate.toISOString(),
-      })
-    );
-    setIsAuthReady(true);
-  }, []);
-
-  const logout = useCallback(() => {
-    setToken(null);
-    setTokenExpirationTimer(null);
-    setUserInfo(null);
-    localStorage.removeItem("userData");
-    setIsAuthReady(true);
-  }, []);
-
+  // Check if user is logged in (on page load)
   useEffect(() => {
-    if (token && tokenExpirationTimer) {
-      const remainingTime =
-        tokenExpirationTimer.getTime() - new Date().getTime();
-      logoutTimer = setTimeout(logout, remainingTime);
-    } else {
-      clearTimeout(logoutTimer);
-    }
-  }, [token, logout, tokenExpirationTimer]);
+    const checkSession = async () => {
+      try {
+        await sendRequest(
+          `${import.meta.env.VITE_APP_BACKEND_URL}/users/me`,
+          "GET"
+        );
+        setIsLoggedIn(true);
+      } catch (err) {
+        console.log(err.message)
+        setIsLoggedIn(false);
+      }
+      setIsAuthReady(true);
+    };
+    checkSession();
+  }, [sendRequest]);
 
-  useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem("userData"));
-    
-
-    if (
-      storedData &&
-      storedData.token &&
-      new Date(storedData.expiration) > new Date()
-    ) {
-      login(
-        storedData.user,
-        storedData.token,
-        new Date(storedData.expiration)
+  // Manual login
+  const login = useCallback(async () => {
+    try {
+      await sendRequest(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/users/me`,
+        "GET"
       );
+      setIsLoggedIn(true);
+    } catch (err) {
+      console.log(err.message);
+      setIsLoggedIn(false);
     }
-    setIsAuthReady(true);
-  }, [login]);
+  }, [sendRequest]);
 
-  return {
-    token,
-    login,
-    logout,
-    userInfo,
-    isLoggedIn: !!token,
-    isAuthReady,
-  };
+  // Manual logout
+  const logout = useCallback(async () => {
+    try {
+      await sendRequest(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/users/logout`,
+        "POST"
+      );
+    } catch (err) {
+      console.error("Logout failed:", err.message);
+    }
+    setIsLoggedIn(false);
+  }, [sendRequest]);
+
+  return { isLoggedIn, isAuthReady, login, logout };
 };

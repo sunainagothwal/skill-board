@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useHttpClient } from "../../common/hooks/http-hook.js";
-import { useAuthContext } from "../../common/context/auth-context.jsx";
 import { usePopup } from "../../common/context/PopupContext.jsx";
 import ResetPwdPopupForm from "./ResetPwdPopupForm";
+import { useAuthContext } from "../../common/context/auth-context.jsx";
 
 const Login = ({ setShowLogin }) => {
-  const { sendRequest } = useHttpClient();
   const { login } = useAuthContext();
+  const { sendRequest } = useHttpClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const Login = ({ setShowLogin }) => {
   const { openPopup } = usePopup();
   const from = location.state?.from?.pathname || "/";
 
-  const handleLoginSubmit = async (e) => {
+  /* const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
       const responseData = await sendRequest(
@@ -32,7 +32,29 @@ const Login = ({ setShowLogin }) => {
     } catch (err) {
       console.error("Login failed:", err);
     }
-  };
+  }; */
+
+const handleLoginSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    // ✅ Call backend, cookie is automatically set in browser
+    const responseData = await sendRequest(
+      `${import.meta.env.VITE_APP_BACKEND_URL}/users/login`,
+      "POST",
+      { email, password }, // no need to stringify manually
+      { "Content-Type": "application/json" }
+    );
+
+    // ✅ No token handling on frontend; cookie is already set
+    if (responseData) {
+      await login();
+      navigate(from, { replace: true });
+    }
+    //navigate(from, { replace: true });
+  } catch (err) {
+    console.error("Login failed:", err);
+  }
+};
 
    const handleResetClick = () => {
     openPopup("pwdResetPopup", {

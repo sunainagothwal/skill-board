@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useHttpClient } from "../../common/hooks/http-hook";
 import { usePopup } from "../../common/context/PopupContext";
 import { showSuccess, showError } from "../../common/toastHelper";
+import { useNavigate } from "react-router-dom";
 
 const DeleteAccountPopupForm = () => {
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { sendRequest } = useHttpClient();
   const { closePopup } = usePopup();
+  const navigate = useNavigate();
 
   const handleDelete = async () => {
     if (!password.trim()) {
@@ -17,20 +18,22 @@ const DeleteAccountPopupForm = () => {
     }
 
     try {
-      await sendRequest(
+      const responseData= await sendRequest(
         `${import.meta.env.VITE_APP_BACKEND_URL}/users/delete-account`,
         "DELETE",
         JSON.stringify({
-          email,
-          password,
+          password
         }),
         { "Content-Type": "application/json" }
       );
-
+     if (responseData) {
+      closePopup()
+      navigate("/login");
       showSuccess("Your account has been deleted successfully");
-      onClose();
+     } 
+     
     } catch (err) {
-      showError("Failed to delete account. Please try again.");
+      showError(err.message||"Failed to delete account. Please try again.");
     }
   };
 
