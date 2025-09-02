@@ -4,12 +4,15 @@ const fileUpload = require("../middleware/file-upload");
 const tasksController = require("../controllers/tasks-controllers");
 const checkAuth = require("../middleware/check-auth")
 const router=express.Router();
-router.get("/:uid", tasksController.getTasksByUserId);
+
 router.get("/", tasksController.getAllTasks);
 router.use(checkAuth);
 router.post("/", fileUpload.single("image"), tasksController.createTask);
-/*router.get("/user/:uid", placesController.getPlacesByUserId);
-router.patch("/:pid", placesController.updatePlace);
-router.delete("/:pid", placesController.deletePlace);
-router.post("/bet/:uid", placesController.createBetByUserId); */
+
+router.post("/connect/:taskId", tasksController.connectToTask);
+// Reject connection
+router.post("/reject/:taskId", tasksController.rejectConnection);
+router.post("/accept/:taskId/:userId", tasksController.acceptConnection);
+router.post("/cancel/:taskId", tasksController.cancelTaskRequest);
+router.get("/inprogress", tasksController.getInProgressTasks);
 module.exports=router

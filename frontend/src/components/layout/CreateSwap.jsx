@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { useHttpClient } from "../../common/hooks/http-hook.js";
 import { showSuccess } from "../../common/toastHelper";
-import { useAuthContext } from "../../common/context/auth-context.jsx"; 
 
 const CreateSwap = () => {
   const { sendRequest } = useHttpClient();
-  const auth = useAuthContext();
   const [taskDetails, setTaskDetails] = useState({
     title: "",
     description: "",
@@ -72,9 +70,7 @@ const submitTask = async (e) => {
         `${import.meta.env.VITE_APP_BACKEND_URL}/tasks`,
         "POST",
         formData,
-        {
-          Authorization: "Bearer " + auth.token,
-        }
+        null // Let browser set Content-Type with boundary for multipart/form-data
       );
       if (responseData) {
         showSuccess("Swap created successfully!");

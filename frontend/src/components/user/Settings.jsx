@@ -1,14 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePopup } from "../../common/context/PopupContext.jsx";
 import DeleteAccountPopupForm from "../auth/DeleteAccountPopupForm";
 
+const darkStyleId = "darkify-style";
+
+function applyDarkMode(enable) {
+  if (enable) {
+    if (!document.getElementById(darkStyleId)) {
+      const style = document.createElement("style");
+      style.id = darkStyleId;
+      style.textContent = `
+        html {
+          filter: invert(1) hue-rotate(180deg) !important;
+          background: #121212 !important;
+        }
+        img, video, iframe {
+          filter: invert(1) hue-rotate(180deg) !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  } else {
+    const existing = document.getElementById(darkStyleId);
+    if (existing) existing.remove();
+  }
+}
+
 function Settings() {
-  const [darkMode, setDarkMode] = useState(false);
+  // ✅ Initialize state from localStorage
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("darkMode") === "true"
+  );
   const [notifications, setNotifications] = useState(true);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const { openPopup } = usePopup();
 
-  //const [language, setLanguage] = useState("en");
+  // Apply dark mode when state changes
+  useEffect(() => {
+    applyDarkMode(darkMode);
+    localStorage.setItem("darkMode", darkMode ? "true" : "false");
+  }, [darkMode]);
 
   const handleDelete = () => {
     openPopup("DeleteAccountPopup", {
@@ -50,16 +80,6 @@ function Settings() {
           </div>
         </label>
       </div>
-
-      {/* <div className="settings-section">
-        <h3>Language</h3>
-        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-          <option value="en">English</option>
-          <option value="es">Spanish</option>
-          <option value="de">German</option>
-          <option value="fr">French</option>
-        </select>
-      </div> */}
 
       <div className="settings-section">
         <h3>Account</h3>

@@ -34,6 +34,5 @@ router.patch(
   fileUpload.single("image"),
   usersController.updateUser
 );
-router.get("/me", usersController.getCurrentUser);
 router.delete("/delete-account", usersController.deleteUser);
 module.exports = router;

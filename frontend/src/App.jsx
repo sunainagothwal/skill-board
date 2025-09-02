@@ -11,6 +11,7 @@ import SignIn from "./components/auth/SignIn";
 import PrivateRoute from "./PrivateRoute";
 import ConfirmSignupPage from "./components/auth/ConfirmSignupPage";
 import ResetPasswordPage from "./components/auth/ResetPasswordPage";
+import RequestsPage from "./components/layout/RequestsPage";
 
 function App() {
   
@@ -18,14 +19,34 @@ function App() {
     <>
       <NavBar />
       <Routes>
-        <Route path="/" element={<UserCard />}/>
-        <Route path="/create-swap" element={ <PrivateRoute><CreateSwap /></PrivateRoute> }/>
+        <Route path="/" element={<UserCard />} />
+        <Route
+          path="/create-swap"
+          element={
+            <PrivateRoute>
+              <CreateSwap />
+            </PrivateRoute>
+          }
+        />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/profileview" element={<ProfileView user={JSON.parse(localStorage.getItem("user"))} />}/>
+        <Route
+          path="/profileview"
+          element={
+            <ProfileView user={JSON.parse(localStorage.getItem("user"))} />
+          }
+        />
         <Route path="/mytask" element={<MyTask />} />
         <Route path="/login" element={<SignIn />} />
         <Route path="/confirm-signup" element={<ConfirmSignupPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route
+          path="/requests"
+          element={
+            <PrivateRoute>
+              <RequestsPage />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </>
   );

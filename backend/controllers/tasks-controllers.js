@@ -62,39 +62,8 @@ const createTask = async (req, res, next) => {
 
   res.status(201).json({ task: createdTask });
 };
-const getTasksByUserId = async (req, res, next) => {
-  const userId = req.params.uid;
-  let userBets;
-  try {
-    userBets = await Bet.find({ creator: userId });
-  } catch (err) {
-    const error = new HttpError(err);
-    return next(err);
-  }
-  if (!userBets || userBets.length === 0) {
-    return next(
-      new HttpError("Could not find bets for the provided user id.", 404)
-    );
-  }
 
-  /* const cleanedBets = existingUser.bets.map((bet) => ({
-    date: bet.date,
-    selectedBet: bet.selectedBet.map((sel) => ({
-      amount: sel.amount,
-      selectedNumber: sel.selectedNumber,
-    })),
-  })); */
-
-  res.json(userBets);
-
-  /* res.json({
-    places: userWithPlaces.places.map((place) =>
-      place.toObject({ getters: true })
-    ),
-  }); */
-};
-
-const getAllTasks = async (req, res, next) => {
+/* const getAllTasks = async (req, res, next) => {
   let tasks;
   try {
     tasks = await Task.find()
@@ -128,8 +97,269 @@ const getAllTasks = async (req, res, next) => {
   }));
 
   res.json({ tasks: transformedTasks });
+}; */
+
+const getAllTasks = async (req, res, next) => {
+  let tasks;
+  try {
+    tasks = await Task.find()
+      .populate("creator", "name image")
+      .populate("connections.user", "name image") // populate users in connections
+      .select(
+        "title description requestedTask offeredTask location attachments deadline creator createdAt status connections"
+      );
+  } catch (err) {
+    const error = new HttpError("Fetching tasks failed", 500);
+    return next(error);
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return next(new HttpError("No tasks found", 404));
+  }
+
+  const transformedTasks = tasks.map((task) => ({
+    _id: task._id,
+    title: task.title,
+    description: task.description,
+    requestedTask: task.requestedTask,
+    offeredTask: task.offeredTask,
+    location: task.location,
+    attachments: task.attachments,
+    deadline: task.deadline,
+    createdAt: task.createdAt,
+    status: task.status,
+    creator: {
+      _id: task.creator?._id || null,
+      name: task.creator?.name || "Unknown",
+      image: task.creator?.image || null,
+    },
+    connections: task.connections.map((conn) => ({
+      user: {
+        _id: conn.user?._id || null,
+        name: conn.user?.name || "Unknown",
+        image: conn.user?.image || null,
+      },
+      status: conn.status,
+    })),
+  }));
+
+  res.json({ tasks: transformedTasks });
 };
 
+// Connect request
+const connectToTask = async (req, res, next) => {
+  const { taskId } = req.params;
+  const { userId } = req.userData;
+
+  try {
+    const task = await Task.findById(taskId).populate("creator", "name");
+    if (!task) return next(new HttpError("Task not found", 404));
+
+    // Check if already requested
+    const existingRequest = task.connections.find(
+      (c) => c.user.toString() === userId
+    );
+    if (existingRequest)
+      return next(new HttpError("You have already requested this task", 400));
+
+    // Add connection request
+    task.connections.push({ user: userId, status: "pending" });
+    await task.save();
+
+    res.status(200).json({
+      message: "Connection request sent successfully",
+      requesterName: req.userData.name || "Someone",
+    });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Failed to send connection request", 500));
+  }
+};
+
+// cancel your connect request
+const cancelTaskRequest = async (req, res, next) => {
+  const { userId } = req.userData;
+  const { taskId } = req.params;
+
+  let task;
+  try {
+    task = await Task.findById(taskId).populate(
+      "connections.user",
+      "name image"
+    );
+  } catch (err) {
+    return next(new HttpError("Fetching task failed, please try again", 500));
+  }
+
+  if (!task) {
+    return next(new HttpError("Task not found", 404));
+  }
+
+  // Find the connection request made by the logged-in user
+  const connectionIndex = task.connections.findIndex(
+    (conn) => conn.user._id.toString() === userId && conn.status === "pending"
+  );
+
+  if (connectionIndex === -1) {
+    return next(new HttpError("No pending request found to cancel", 404));
+  }
+
+  // Remove the connection request
+  task.connections.splice(connectionIndex, 1);
+
+  try {
+    await task.save();
+  } catch (err) {
+    return next(
+      new HttpError("Canceling request failed, please try again", 500)
+    );
+  }
+
+  res.status(200).json({ message: "Request canceled successfully" });
+};
+// Reject request
+const rejectConnection = async (req, res, next) => {
+  const { taskId } = req.params;
+ const { userId } = req.userData;
+
+  try {
+    const task = await Task.findById(taskId).populate("creator", "name");
+    if (!task) return next(new HttpError("Task not found", 404));
+
+    // Find the connection request
+    const connection = task.connections.find(
+      (c) => c.user.toString() === userId && c.status === "pending"
+    );
+    if (!connection)
+      return next(new HttpError("No pending request found to reject", 400));
+
+    // Mark as rejected
+    connection.status = "rejected";
+    await task.save();
+
+    res.status(200).json({
+      message: "Connection request rejected",
+      requesterName: req.userData.name || "Someone",
+    });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Failed to reject connection request", 500));
+  }
+};
+
+const acceptConnection = async (req, res, next) => {
+  const { taskId, userId } = req.params;
+  const currentUser = req.userData.userId; // user performing the accept action
+
+  try {
+    const task = await Task.findById(taskId).populate("creator", "name");
+    if (!task) return next(new HttpError("Task not found", 404));
+
+    // Only the creator of the task can accept requests
+    if (task.creator._id.toString() !== currentUser) {
+      return next(new HttpError("You are not authorized to accept this request", 403));
+    }
+
+    // Find the connection request
+    const connection = task.connections.find(
+      (c) => c.user.toString() === userId && c.status === "pending"
+    );
+    if (!connection) {
+      return next(new HttpError("No pending connection request found", 400));
+    }
+
+    // Mark as accepted
+    connection.status = "accepted";
+    task.status = "in-progress"; // change task status
+    await task.save();
+
+    res.status(200).json({
+      message: "Connection request accepted successfully",
+      requesterName: connection.user.name || "Someone",
+    });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Failed to accept connection request", 500));
+  }
+};
+
+
+const getInProgressTasks = async (req, res, next) => {
+  const { userId } = req.userData;
+  let tasks;
+  try {
+    tasks = await Task.find()
+      .populate("creator", "name image")
+      .populate("connections.user", "name image") // populate user inside connections
+      .select("title description creator connections status createdAt");
+  } catch (err) {
+    return next(new HttpError("Fetching tasks failed, please try again", 500));
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return res.json({ sentRequests: [], receivedRequests: [] });
+  }
+
+  // --- SENT Requests: Logged-in user requested someone else's task ---
+  const sentRequests = [];
+  // --- RECEIVED Requests: Someone else requested logged-in user's task ---
+  const receivedRequests = [];
+
+  tasks.forEach((task) => {
+    // Check connections for each task
+    task.connections.forEach((conn) => {
+      if (
+        conn.user &&
+        conn.user._id.toString() === userId &&
+        conn.status === "pending"
+      ) {
+        // Sent request: user requested this task
+        sentRequests.push({
+          ...formatTask(task),
+          connectionStatus: conn.status,
+        });
+      }
+
+      if (
+        task.creator &&
+        task.creator._id.toString() === userId &&
+        conn.status === "pending"
+      ) {
+        // Received request: someone requested my task
+        receivedRequests.push({
+          ...formatTask(task),
+          requestedBy: {
+            id: conn.user._id,
+            name: conn.user.name,
+            image: conn.user.image || null,
+          },
+          connectionStatus: conn.status,
+        });
+      }
+    });
+  });
+
+  res.json({ sentRequests, receivedRequests });
+};
+
+// Helper to format task info
+const formatTask = (task) => ({
+  _id: task._id,
+  title: task.title,
+  description: task.description,
+  createdAt: task.createdAt,
+  creator: {
+    id: task.creator?._id || null,
+    name: task.creator?.name || "Unknown",
+    image: task.creator?.image || null,
+  },
+});
+
+
 exports.createTask = createTask;
-exports.getTasksByUserId = getTasksByUserId;
 exports.getAllTasks = getAllTasks;
+exports.connectToTask = connectToTask;
+exports.cancelTaskRequest = cancelTaskRequest;
+exports.rejectConnection = rejectConnection;
+exports.acceptConnection = acceptConnection;
+exports.getInProgressTasks = getInProgressTasks;

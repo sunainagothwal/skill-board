@@ -62,6 +62,15 @@ function NavBar() {
             Create Swap
           </Link>
         </li>
+        <li>
+          <Link
+            to="/requests"
+            onClick={() => setMobileMenuOpen(false)}
+            className={location.pathname === "/requests" ? "active-link" : ""}
+          >
+            Requests
+          </Link>
+        </li>
 
         <li className="profile_dropdown" ref={dropdownRef}>
           <span
