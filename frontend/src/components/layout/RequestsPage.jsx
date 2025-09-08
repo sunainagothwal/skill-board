@@ -42,18 +42,21 @@ function RequestsPage() {
     }
   };
 
-  const handleAccept = async (taskId) => {
-    try {
-      await sendRequest(
-        `${import.meta.env.VITE_APP_BACKEND_URL}/tasks/accept/${taskId}`,
-        "POST"
-      );
-      setReceivedRequests((prev) => prev.filter((t) => t._id !== taskId));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to accept request");
-    }
-  };
+ const handleAccept = async (taskId, userId) => {
+   try {
+     await sendRequest(
+       `${
+         import.meta.env.VITE_APP_BACKEND_URL
+       }/tasks/accept/${taskId}/${userId}`, // ✅ send requesterId in params
+       "POST"
+     );
+     setReceivedRequests((prev) => prev.filter((t) => t._id !== taskId));
+   } catch (err) {
+     console.error(err);
+     alert("Failed to accept request");
+   }
+ };
+
 
   const handleReject = async (taskId) => {
     try {
@@ -119,8 +122,9 @@ function RequestsPage() {
               </h4>
               <p className="text-sm text-gray-600 mb-2">{task.description}</p>
               <div className="space-x-2">
+                {console.log(task)}
                 <button
-                  onClick={() => handleAccept(task._id)}
+                  onClick={() => handleAccept(task._id, task.requestedBy?.id)}
                   className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600"
                 >
                   Accept

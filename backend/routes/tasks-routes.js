@@ -15,4 +15,14 @@ router.post("/reject/:taskId", tasksController.rejectConnection);
 router.post("/accept/:taskId/:userId", tasksController.acceptConnection);
 router.post("/cancel/:taskId", tasksController.cancelTaskRequest);
 router.get("/inprogress", tasksController.getInProgressTasks);
+router.get("/my", tasksController.getMyTasks);
+// Close task
+router.patch("/close/:taskId", tasksController.closeTask);
+
+// Delete task
+router.delete("/:taskId", tasksController.deleteTask);
+
+// Edit task
+router.patch("/:taskId", tasksController.updateTask);
+
 module.exports=router

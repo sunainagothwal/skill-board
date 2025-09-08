@@ -8,6 +8,7 @@ const usersRoutes = require("./routes/users-routes");
 const tasksRoutes = require("./routes/tasks-routes");
 const HttpError = require("./models/http-error");
 const { default: mongoose } = require("mongoose");
+const notificationRoutes = require("./routes/notifications-routes"); // ✅ fixed filename (plural)
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.use("/uploads/images", express.static(path.join("uploads", "images")));
 
 // ✅ CORS settings for cookies
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL); // e.g. http://localhost:3000
+  res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL); // e.g. http://localhost:5173
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use("/api/users", usersRoutes);
 app.use("/api/tasks", tasksRoutes);
+app.use("/api/notifications", notificationRoutes); // ✅ namespace fixed to /api
 
 // 404 handler
 app.use((req, res, next) => {

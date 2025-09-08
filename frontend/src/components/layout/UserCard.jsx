@@ -3,11 +3,11 @@ import HowItWorks from "./HowItWorks.jsx";
 import { useHttpClient } from "../../common/hooks/http-hook.js";
 import { FiSearch, FiX } from "react-icons/fi";
 import { formatUTCToLocal } from "../../common/utils.js";
-import { io } from "socket.io-client";
+//import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../common/context/auth-context.jsx";
 
-const socket = io(import.meta.env.VITE_APP_BACKEND_URL);
+//const socket = io(import.meta.env.VITE_APP_BACKEND_URL);
 
 const UserCard = () => {
   const { sendRequest } = useHttpClient();
@@ -38,7 +38,7 @@ React.useEffect(() => {
       console.error(err);
     }
   };
-  if (isLoggedIn) getAllTasks();
+getAllTasks();
 }, [isLoggedIn, user?.id]);
 
 
@@ -98,15 +98,10 @@ React.useEffect(() => {
         `${import.meta.env.VITE_APP_BACKEND_URL}/tasks/connect/${task._id}`,
         "POST",
       );
-
-      socket.emit("sendNotification", {
-        to: task.creator._id,
-        message: `${res.requesterName} wants to connect on "${task.title}"`,
-      });
-
+       if(res){
       setTasksList((prev) => prev.filter((t) => t._id !== task._id));
       setFilteredTasks((prev) => prev.filter((t) => t._id !== task._id));
-
+       }
       alert(res.message);
     } catch (err) {
       console.error(err);
@@ -122,14 +117,10 @@ React.useEffect(() => {
         `${import.meta.env.VITE_APP_BACKEND_URL}/tasks/reject/${task._id}`,
         "POST"
       );
-
-      socket.emit("sendNotification", {
-        to: task.creator._id,
-        message: `${res.requesterName} rejected your connection request on "${task.title}"`,
-      });
-
+      if(res){   
       setTasksList((prev) => prev.filter((t) => t._id !== task._id));
       setFilteredTasks((prev) => prev.filter((t) => t._id !== task._id));
+      }
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to reject connection request");

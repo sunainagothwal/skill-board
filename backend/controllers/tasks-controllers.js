@@ -4,7 +4,22 @@ const HttpError = require('../models/http-error');
 
 const Task=require('../models/task');
 const User=require("../models/user")
+const {
+  createNotification,
+} = require("../controllers/notifications-controller");
 
+// Helper to format task info
+const formatTask = (task) => ({
+  _id: task._id,
+  title: task.title,
+  description: task.description,
+  createdAt: task.createdAt,
+  creator: {
+    id: task.creator?._id || null,
+    name: task.creator?.name || "Unknown",
+    image: task.creator?.image || null,
+  },
+});
 
 //create Task
 const createTask = async (req, res, next) => {
@@ -165,7 +180,14 @@ const connectToTask = async (req, res, next) => {
     // Add connection request
     task.connections.push({ user: userId, status: "pending" });
     await task.save();
-
+    
+    //notification
+    await createNotification({
+      recipient: task.creator, // task owner
+      sender: userId, // current logged-in user
+      message: `requested your task: ${task.title}`,
+    });
+    
     res.status(200).json({
       message: "Connection request sent successfully",
       requesterName: req.userData.name || "Someone",
@@ -220,26 +242,32 @@ const cancelTaskRequest = async (req, res, next) => {
 // Reject request
 const rejectConnection = async (req, res, next) => {
   const { taskId } = req.params;
- const { userId } = req.userData;
+  const { userId } = req.userData;
 
   try {
-    const task = await Task.findById(taskId).populate("creator", "name");
+    const task = await Task.findById(taskId)
+      .populate("creator", "name")
+      .populate("connections.user", "name"); // get requester details too
     if (!task) return next(new HttpError("Task not found", 404));
 
-    // Find the connection request
-    const connection = task.connections.find(
-      (c) => c.user.toString() === userId && c.status === "pending"
-    );
-    if (!connection)
+    // ✅ Only the creator of the task can reject requests
+    if (task.creator._id.toString() !== userId) {
+      return next(new HttpError("Not authorized to reject this request", 403));
+    }
+
+    // Find the connection that is still pending
+    const connection = task.connections.find((c) => c.status === "pending");
+    if (!connection) {
       return next(new HttpError("No pending request found to reject", 400));
+    }
 
     // Mark as rejected
     connection.status = "rejected";
     await task.save();
 
     res.status(200).json({
-      message: "Connection request rejected",
-      requesterName: req.userData.name || "Someone",
+      message: `Connection request from ${connection.user.name} rejected`,
+      requesterName: connection.user.name,
     });
   } catch (err) {
     console.error(err);
@@ -247,41 +275,55 @@ const rejectConnection = async (req, res, next) => {
   }
 };
 
+
 const acceptConnection = async (req, res, next) => {
-  const { taskId, userId } = req.params;
-  const currentUser = req.userData.userId; // user performing the accept action
+  const { taskId, userId } = req.params; // userId = requester
+  const currentUser = req.userData.userId; // logged-in user (task creator)
 
   try {
-    const task = await Task.findById(taskId).populate("creator", "name");
+    const task = await Task.findById(taskId)
+      .populate("creator", "name")
+      .populate("connections.user", "name");
+
     if (!task) return next(new HttpError("Task not found", 404));
 
-    // Only the creator of the task can accept requests
+    // ✅ Only the task creator can accept
     if (task.creator._id.toString() !== currentUser) {
-      return next(new HttpError("You are not authorized to accept this request", 403));
+      return next(
+        new HttpError("You are not authorized to accept this request", 403)
+      );
     }
 
-    // Find the connection request
+    // ✅ Find the request from that user
     const connection = task.connections.find(
-      (c) => c.user.toString() === userId && c.status === "pending"
+      (c) => c.user._id.toString() === userId && c.status === "pending"
     );
     if (!connection) {
       return next(new HttpError("No pending connection request found", 400));
     }
 
-    // Mark as accepted
+    // ✅ Accept the request
     connection.status = "accepted";
-    task.status = "in-progress"; // change task status
+    task.status = "in-progress";
     await task.save();
 
+    // ✅ Notify requester
+    await createNotification({
+      recipient: userId, // requester
+      sender: currentUser, // task creator (acceptor)
+      message: `accepted your request for task: ${task.title}`,
+    });
+
     res.status(200).json({
-      message: "Connection request accepted successfully",
-      requesterName: connection.user.name || "Someone",
+      message: `You accepted the connection request from ${connection.user.name}`,
+      requesterName: connection.user.name,
     });
   } catch (err) {
     console.error(err);
     return next(new HttpError("Failed to accept connection request", 500));
   }
 };
+
 
 
 const getInProgressTasks = async (req, res, next) => {
@@ -342,19 +384,117 @@ const getInProgressTasks = async (req, res, next) => {
   res.json({ sentRequests, receivedRequests });
 };
 
-// Helper to format task info
-const formatTask = (task) => ({
-  _id: task._id,
-  title: task.title,
-  description: task.description,
-  createdAt: task.createdAt,
-  creator: {
-    id: task.creator?._id || null,
-    name: task.creator?.name || "Unknown",
-    image: task.creator?.image || null,
-  },
-});
+const getMyTasks = async (req, res, next) => {
+  const { userId } = req.userData;
 
+  let tasks;
+  try {
+    tasks = await Task.find({ creator: userId })
+      .populate("creator", "name image")
+      .select(
+        "title description requestedTask offeredTask location attachments deadline status createdAt"
+      );
+  } catch (err) {
+    return next(
+      new HttpError("Fetching your tasks failed, please try again", 500)
+    );
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return res.json({ tasks: [] });
+  }
+
+  const transformedTasks = tasks.map((task) => ({
+    _id: task._id,
+    title: task.title,
+    description: task.description,
+    requestedTask: task.requestedTask,
+    offeredTask: task.offeredTask,
+    location: task.location,
+    attachments: task.attachments,
+    deadline: task.deadline,
+    createdAt: task.createdAt,
+    status: task.status,
+    creator: {
+      id: task.creator?._id || null,
+      name: task.creator?.name || "Unknown",
+      image: task.creator?.image || null,
+    },
+  }));
+
+  res.json({ tasks: transformedTasks });
+};
+// Close a task
+const closeTask = async (req, res, next) => {
+  const { taskId } = req.params;
+  const { userId } = req.userData;
+
+  let task;
+  try {
+    task = await Task.findById(taskId);
+    if (!task) return next(new HttpError("Task not found", 404));
+    if (task.creator.toString() !== userId)
+      return next(new HttpError("Not authorized", 403));
+
+    task.status = "cancelled";
+    await task.save();
+
+    res.json({ message: "Task closed successfully", taskId });
+  } catch (err) {
+    return next(new HttpError("Closing task failed", 500));
+  }
+};
+
+// Delete a task
+const deleteTask = async (req, res, next) => {
+  const { taskId } = req.params;
+  const { userId } = req.userData;
+
+  let task;
+  try {
+    task = await Task.findById(taskId);
+    if (!task) return next(new HttpError("Task not found", 404));
+    if (task.creator.toString() !== userId)
+      return next(new HttpError("Not authorized", 403));
+
+    await task.deleteOne();
+
+    res.json({ message: "Task deleted successfully", taskId });
+  } catch (err) {
+    return next(new HttpError("Deleting task failed", 500));
+  }
+};
+
+// Update (edit) a task
+const updateTask = async (req, res, next) => {
+  const { taskId } = req.params;
+  const { userId } = req.userData;
+  const { title, description, requestedTask, offeredTask, location, deadline } =
+    req.body;
+
+  let task;
+  try {
+    task = await Task.findById(taskId);
+    if (!task) return next(new HttpError("Task not found", 404));
+    if (task.creator.toString() !== userId)
+      return next(new HttpError("Not authorized", 403));
+
+    // Update only allowed fields
+    if (title) task.title = title;
+    if (description) task.description = description;
+    if (requestedTask) task.requestedTask = requestedTask;
+    if (offeredTask) task.offeredTask = offeredTask;
+    if (location) task.location = location;
+    if (deadline) task.deadline = deadline;
+
+    await task.save();
+    await task.populate("creator", "name image");
+
+    res.json({ message: "Task updated successfully", task });
+  } catch (err) {
+    return next(new HttpError("Updating task failed", 500));
+  }
+};
 
 exports.createTask = createTask;
 exports.getAllTasks = getAllTasks;
@@ -363,3 +503,7 @@ exports.cancelTaskRequest = cancelTaskRequest;
 exports.rejectConnection = rejectConnection;
 exports.acceptConnection = acceptConnection;
 exports.getInProgressTasks = getInProgressTasks;
+exports.getMyTasks = getMyTasks;
+exports.closeTask=closeTask;
+exports.deleteTask=deleteTask;
+exports.updateTask=updateTask;
