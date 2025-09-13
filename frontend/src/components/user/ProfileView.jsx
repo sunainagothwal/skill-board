@@ -52,7 +52,10 @@ const ProfileView = () => {
   };
 
   const addTeachSkill = () => {
-    if (newTeachSkill.trim() !== "") {
+    if (
+      newTeachSkill.trim() !== "" &&
+      !editUser.knows.includes(newTeachSkill)
+    ) {
       setEditUser({
         ...editUser,
         knows: [...editUser.knows, newTeachSkill.trim()],
@@ -61,8 +64,18 @@ const ProfileView = () => {
     }
   };
 
+  const removeTeachSkill = (idx) => {
+    setEditUser({
+      ...editUser,
+      knows: editUser.knows.filter((_, i) => i !== idx),
+    });
+  };
+
   const addLearnSkill = () => {
-    if (newLearnSkill.trim() !== "") {
+    if (
+      newLearnSkill.trim() !== "" &&
+      !editUser.wants.includes(newLearnSkill)
+    ) {
       setEditUser({
         ...editUser,
         wants: [...editUser.wants, newLearnSkill.trim()],
@@ -71,204 +84,191 @@ const ProfileView = () => {
     }
   };
 
+  const removeLearnSkill = (idx) => {
+    setEditUser({
+      ...editUser,
+      wants: editUser.wants.filter((_, i) => i !== idx),
+    });
+  };
+
   const handleSave = () => {
     setStoredUser(editUser);
-    setIsEditing(false);
+    alert("Profile saved successfully!");
   };
 
   return (
     <div className="profile_page">
-      {!isEditing ? (
-        <div>
-          <div className="header_row">
-            <h2>My Profile</h2>
-            <button className="edit_button" onClick={() => setIsEditing(true)}>
-              Edit Profile
-            </button>
-          </div>
+      <div>
+        <h2>My Profile</h2>
 
-          <div className="card">
-            <h3>Profile Information</h3>
-            <div className="profile_info_row">
-              <div className="profile_img_container">
-                {storedUser.img ? (
-                  <img
-                    src={storedUser.img}
-                    alt={storedUser.name}
-                    className="profile_img"
-                  />
-                ) : (
-                  <div className="profile_img_placeholder">No Image</div>
-                )}
-              </div>
-              <table className="info_table">
-                <tbody>
-                  <tr>
-                    <td className="label">Display Name</td>
-                    <td>{storedUser.name}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Email</td>
-                    <td>{storedUser.email}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Location</td>
-                    <td>{storedUser.city}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Bio</td>
-                    <td>{storedUser.description}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3>Skills I Can Teach</h3>
-            {storedUser.knows.length > 0 ? (
-              <ul>
-                {storedUser.knows.map((skill, idx) => (
-                  <li key={idx}>{skill}</li>
-                ))}
-              </ul>
+        {/* Profile Image */}
+        <div className="card">
+          <div className="profile_img_edit_container">
+            {editUser.img ? (
+              <img
+                src={editUser.img}
+                alt="preview"
+                className="profile_img_edit"
+              />
             ) : (
-              <p className="empty">No skills added yet.</p>
+              <div className="profile_img_edit">No Image</div>
             )}
-          </div>
-
-          <div className="card">
-            <h3>Skills I Want to Learn</h3>
-            {storedUser.wants.length > 0 ? (
-              <ul>
-                {storedUser.wants.map((skill, idx) => (
-                  <li key={idx}>{skill}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="empty">No skills added yet.</p>
-            )}
+            <label className="upload_btn">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </label>
           </div>
         </div>
-      ) : (
-        <div>
-          <h2>My Profile</h2>
 
-          <div className="card">
-            <div className="profile_img_edit_container">
-              {editUser.img ? (
-                <img
-                  src={editUser.img}
-                  alt="preview"
-                  className="profile_img_edit"
-                />
-              ) : (
-                <div className="profile_img_edit">No Image</div>
-              )}
-              <label className="upload_btn">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </label>
-            </div>
-          </div>
+        {/* Basic Info */}
+        <div className="card">
+          <h3>Basic Information</h3>
+          <label>Display Name</label>
+          <input
+            type="text"
+            name="name"
+            value={editUser.name}
+            onChange={handleChange}
+          />
 
-          <div className="card">
-            <h3>Basic Information</h3>
-            <label>Display Name</label>
+          <label>Location</label>
+          <input
+            type="text"
+            name="city"
+            value={editUser.city}
+            onChange={handleChange}
+            placeholder="City, Country"
+          />
+
+          <label>Bio</label>
+          <textarea
+            name="description"
+            value={editUser.description}
+            onChange={handleChange}
+            placeholder="Tell others about yourself..."
+          />
+        </div>
+
+        {/* Teach Skills */}
+        <div className="card">
+          <h3>Skills I Can Teach</h3>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
             <input
               type="text"
-              name="name"
-              value={editUser.name}
-              onChange={handleChange}
+              value={newTeachSkill}
+              onChange={(e) => setNewTeachSkill(e.target.value)}
+              placeholder="Add a skill you can teach..."
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
             />
-
-            <label>Location</label>
-            <input
-              type="text"
-              name="city"
-              value={editUser.city}
-              onChange={handleChange}
-              placeholder="City, Country"
-            />
-
-            <label>Bio</label>
-            <textarea
-              name="description"
-              value={editUser.description}
-              onChange={handleChange}
-              placeholder="Tell others about yourself..."
-            />
-          </div>
-
-          <div className="card">
-            <h3>Skills I Can Teach</h3>
-            <div className="skill_input">
-              <input
-                type="text"
-                value={newTeachSkill}
-                onChange={(e) => setNewTeachSkill(e.target.value)}
-                placeholder="Add a skill you can teach..."
-              />
-              <button onClick={addTeachSkill} className="add_btn">
-                +
-              </button>
-            </div>
-            <ul className="skills_list">
-              {editUser.knows.map((skill, idx) => (
-                <li key={idx} className="skill_item">
-                  {skill}
-                  <button
-                    className="remove_skill_btn"
-                    onClick={() => removeTeachSkill(idx)}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="card">
-            <h3>Skills I Want to Learn</h3>
-            <div className="skill_input">
-              <input
-                type="text"
-                value={newLearnSkill}
-                onChange={(e) => setNewLearnSkill(e.target.value)}
-                placeholder="Add a skill you want to learn..."
-              />
-              <button onClick={addTeachSkill} className="add_btn">
-                +
-              </button>
-            </div>
-            <ul className="skills_list">
-              {editUser.knows.map((skill, idx) => (
-                <li key={idx} className="skill_item">
-                  {skill}
-                  <button
-                    className="remove_skill_btn"
-                    onClick={() => removeTeachSkill(idx)}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="edit_actions">
-            <button onClick={() => setIsEditing(false)} className="cancel_btn">
-              Cancel
+            <button
+              onClick={addTeachSkill}
+            >
+              +
             </button>
-            <button onClick={handleSave} className="save_btn">
-              Save Profile
-            </button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {editUser.knows.map((skill, idx) => (
+              <span
+                key={idx}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "6px 12px",
+                  background: "#f1f3f5",
+                  border: "1px solid #ccc",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                }}
+              >
+                {skill}
+                <button
+                  onClick={() => removeTeachSkill(idx)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    marginLeft: "6px",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    color: "#555",
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Learn Skills */}
+        <div className="card">
+          <h3>Skills I Want to Learn</h3>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <input
+              type="text"
+              value={newLearnSkill}
+              onChange={(e) => setNewLearnSkill(e.target.value)}
+              placeholder="Add a skill you want to learn..."
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            />
+            <button
+              onClick={addLearnSkill}
+            >
+              +
+            </button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {editUser.wants.map((skill, idx) => (
+              <span
+                key={idx}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "6px 12px",
+                  background: "#f1f3f5",
+                  border: "1px solid #ccc",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                }}
+              >
+                {skill}
+                <button
+                  onClick={() => removeLearnSkill(idx)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    marginLeft: "6px",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    color: "#555",
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Save Action */}
+        <div className="edit_actions">
+          <button onClick={handleSave} className="save_btn">
+            Save Profile
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

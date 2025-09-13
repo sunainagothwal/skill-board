@@ -67,15 +67,15 @@ function NavBar() {
 
     if (!notifOpen) {
       try {
-         await fetch(
-           `${import.meta.env.VITE_APP_BACKEND_URL}/notifications/mark-read`,
-           {
-             method: "POST",
-             credentials: "include",
-           }
-         );
-         // ✅ mark them read locally
-         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        await fetch(
+          `${import.meta.env.VITE_APP_BACKEND_URL}/notifications/mark-read`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+        // ✅ mark them read locally
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       } catch (err) {
         console.error("Failed to mark notifications as read", err);
       }
@@ -181,20 +181,21 @@ function NavBar() {
           </li>
         )}
 
+        {/* 👤 Account / Sign In */}
         <li className="profile_dropdown" ref={dropdownRef}>
-          <span
-            className="profile_link"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-          >
-            Account
-            <div className="profile_icon">
-              <FaUser />
-            </div>
-          </span>
-          {dropdownOpen && (
-            <div className="dropdown">
-              {isLoggedIn ? (
-                <>
+          {isLoggedIn ? (
+            <>
+              <span
+                className="profile_link"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                Account
+                <div className="profile_icon">
+                  <FaUser />
+                </div>
+              </span>
+              {dropdownOpen && (
+                <div className="dropdown">
                   <div
                     className="drop_item"
                     onClick={() => setDropdownOpen(false)}
@@ -228,20 +229,21 @@ function NavBar() {
                     </Link>
                   </div>
                   <div className="drop_item" onClick={handleLogout}>
-                    Logout
+                    <span className="drop-item">Logout</span>
                   </div>
-                </>
-              ) : (
-                <div
-                  className="drop_item"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  <Link to="/login" className="dropdown-text">
-                    Login / Signup
-                  </Link>
                 </div>
               )}
-            </div>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className={`signin_link ${
+                location.pathname === "/login" ? "active-link" : ""
+              }`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign In
+            </Link>
           )}
         </li>
       </ul>
