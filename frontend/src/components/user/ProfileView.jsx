@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useHttpClient } from "../../common/hooks/http-hook.js";
 
 const ProfileView = () => {
+  const { sendRequest } = useHttpClient();
   const [isEditing, setIsEditing] = useState(false);
 
   const [storedUser, setStoredUser] = useState({
@@ -18,6 +20,23 @@ const ProfileView = () => {
   const [editUser, setEditUser] = useState(storedUser);
   const [newTeachSkill, setNewTeachSkill] = useState("");
   const [newLearnSkill, setNewLearnSkill] = useState("");
+
+   useEffect(() => {
+      const fetchUserProfile = async () => {
+        try {
+          const responseData = await sendRequest(
+            `${import.meta.env.VITE_APP_BACKEND_URL}/users/profile`
+          );
+          console.log("user profile",responseData)
+        } catch (err) {
+          console.error(err);
+        } finally {
+        console.log("fetch user profile success")  
+        }
+      };
+  
+    fetchUserProfile();
+    }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

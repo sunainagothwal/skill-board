@@ -28,7 +28,7 @@ router.post("/logout", usersController.logout);
 router.use(checkAuth);
 
 router.get("/me", usersController.getCurrentUser); // Get logged-in user
-
+router.get("/profile", usersController.getUserProfile);
 router.patch(
   "/updateUser",
   fileUpload.single("image"),

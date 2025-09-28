@@ -186,6 +186,22 @@ const getCurrentUser = async (req, res, next) => {
   }
 };
 
+// Get logged in user's profile info (separate from /me)
+const getUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.userData.userId; // injected by auth middleware
+    const user = await User.findById(userId).select("-password -__v");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ profile: user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Fetching profile failed, please try again later." });
+  }
+};
 const logout = (req, res, next) => {
   res.clearCookie("token", {
     httpOnly: true,
@@ -422,6 +438,7 @@ exports.getUserInfo = getUserInfo;
 exports.sendResetEmail = sendResetEmail;
 exports.updatePassword = updatePassword;
 exports.getCurrentUser = getCurrentUser;
+exports.getUserProfile = getUserProfile;
 exports.logout = logout;
 exports.deleteUser = deleteUser;
 
