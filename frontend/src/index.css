@@ -174,7 +174,7 @@ a {
   color: #333;
   cursor: pointer;
   transition: background-color 0.25s ease,
-  color 0.25s ease;
+    color 0.25s ease;
   user-select: none;
 }
 
@@ -201,6 +201,14 @@ a {
   color: #4a90e2;
 }
 
+button.btn {
+  padding: 8px 14px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
 .profile_page {
   padding: 20px;
@@ -210,15 +218,10 @@ a {
   background: #f8f9fc;
 }
 
-.header_row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 h2 {
   font-weight: 600;
   margin-bottom: 15px;
+  text-align: center;
 }
 
 .card {
@@ -235,56 +238,41 @@ h2 {
   font-weight: 600;
 }
 
-.profile_info_row {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.profile_img_container {
-  flex-shrink: 0;
-}
-
-.profile_img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.info_table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.info_table td {
-  padding: 12px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.info_table .label {
-  font-weight: 600;
+.profile_img_edit_container {
+  position: relative;
   width: 150px;
-  color: #374151;
+  height: 150px;
+  margin: 0 auto 20px;
 }
 
-.empty {
-  color: gray;
-  font-size: 14px;
+.profile_img_edit {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #4f46e5;
+  display: block;
 }
 
-.edit_button {
-  padding: 6px 14px;
-  margin-bottom: 10px;
-  background: #4f46e5;
-  color: white;
+.upload_btn {
+  position: absolute;
+  bottom: 18px;
+  right: 49px;
+  background-color: #eeeef3;
   border: none;
-  border-radius: 6px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  color: white;
+  font-size: 18px;
 }
 
-.edit_button:hover {
-  background: #4338ca;
+.upload_btn input {
+  display: none;
 }
 
 .card input,
@@ -298,51 +286,35 @@ h2 {
   font-size: 14px;
 }
 
-button.btn {
-  padding: 8px 14px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
 .skill_input {
   position: relative;
-  display: inline-block;
   width: 100%;
+  margin-bottom: 15px;
 }
 
 .skill_input input {
   width: 100%;
-  padding-right: 40px;
-  height: 40px;
+  padding: 10px 40px 10px 12px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
   font-size: 14px;
 }
 
 .skill_input button {
   position: absolute;
+  top: 50%;
   right: 10px;
-  top: 42%;
   transform: translateY(-50%);
+  background: none;
   border: none;
-  color: grey;
-  width: 3rem;
-  height: 3rem;
+  font-size: 20px;
+  color: #4f46e5;
   cursor: pointer;
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .skill_input button:hover {
-  background: #4338ca;
+  color: #4338ca;
 }
-
 
 .edit_actions {
   display: flex;
@@ -358,6 +330,50 @@ button.btn {
   cursor: pointer;
 }
 
+.add-btn {
+  width: 38px;
+  height: 38px;
+  margin-top: 0.4rem;
+  border-radius: 30%;
+  background-color: #4e47ca;
+  color: white;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.4);
+  transition: all 0.25s ease;
+}
+
+.add-btn:hover {
+  background-color: #764ba2;
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #f1f3f5;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  margin-left: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s;
+}
+
+.remove-btn:hover {
+  color: #d11a2a;
+}
+
 .save_btn {
   padding: 8px 14px;
   border: none;
@@ -367,6 +383,25 @@ button.btn {
   cursor: pointer;
 }
 
+.skill_tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #f1f3f5;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  margin: 4px;
+}
+
+.skill_tag button {
+  background: transparent;
+  border: none;
+  margin-left: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #555;
+}
 
 .page {
   max-width: 1000px;

@@ -86,7 +86,7 @@ const CreateSwap = () => {
       <form className="card form" onSubmit={submitTask} noValidate>
         <label>Title</label>
         <input
-          placeholder="e.g., Garden Weeding for Dog Walking"
+          placeholder="e.g., website design"
           value={taskDetails.title}
           onChange={(e) => {
             setTaskDetails({ ...taskDetails, title: e.target.value });

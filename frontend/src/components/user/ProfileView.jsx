@@ -3,97 +3,167 @@ import { useHttpClient } from "../../common/hooks/http-hook.js";
 
 const ProfileView = () => {
   const { sendRequest } = useHttpClient();
-  const [isEditing, setIsEditing] = useState(false);
-
+  const [selectedFile, setSelectedFile] = useState(null);
   const [storedUser, setStoredUser] = useState({
-    name: "Sunaina",
-    city: "Not set",
-    knows: [],
-    wants: [],
-    img: "https://randomuser.me/api/portraits/women/68.jpg",
-    description: "No bio provided",
-    email: "abc@gmail.com",
-    password: "123456789",
+    name: "",
+    city: "",
+    offeredTask: [],
+    requestedTask: [],
+    image: "",
+    bio: "",
+    email: "",
     phone: "",
   });
 
-  const [editUser, setEditUser] = useState(storedUser);
+  const [userProfile, setUserProfile] = useState(storedUser);
   const [newTeachSkill, setNewTeachSkill] = useState("");
   const [newLearnSkill, setNewLearnSkill] = useState("");
 
-   useEffect(() => {
-      const fetchUserProfile = async () => {
+  const parseSkills = (skills) => {
+    if (!skills) return [];
+
+    if (Array.isArray(skills)) {
+      if (skills.length === 1 && typeof skills[0] === "string") {
         try {
-          const responseData = await sendRequest(
-            `${import.meta.env.VITE_APP_BACKEND_URL}/users/profile`
-          );
-          console.log("user profile",responseData)
-        } catch (err) {
-          console.error(err);
-        } finally {
-        console.log("fetch user profile success")  
+          const parsed = JSON.parse(skills[0]);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        } catch {
+          return skills;
         }
-      };
-  
+      }
+      return skills;
+    }
+
+    try {
+      const parsed = JSON.parse(skills);
+      return parseSkills(parsed);
+    } catch {
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const responseData = await sendRequest(
+          `${import.meta.env.VITE_APP_BACKEND_URL}/users/profile`
+        );
+
+        if (responseData?.profile) {
+          setUserProfile({
+            name: responseData.profile.name || "",
+            city: responseData.profile.city || "",
+            offeredTask: parseSkills(responseData.profile.offeredTask),
+            requestedTask: parseSkills(responseData.profile.requestedTask),
+            image: responseData.profile.image || "",
+            bio: responseData.profile.bio || "",
+            email: responseData.profile.email || "",
+            phone: responseData.profile.phone || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
     fetchUserProfile();
-    }, []);
+  }, [sendRequest]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditUser({ ...editUser, [name]: value });
+    setUserProfile((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imgUrl = URL.createObjectURL(file);
-      setEditUser({ ...editUser, img: imgUrl });
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUserProfile((prev) => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      const formData = new FormData();
+      if (userProfile.city) formData.append("city", userProfile.city);
+      if (userProfile.bio) formData.append("bio", userProfile.bio);
+      if (userProfile.phone) formData.append("phone", userProfile.phone);
+      if (userProfile.name) formData.append("name", userProfile.name);
+      if (selectedFile) formData.append("image", selectedFile);
+
+      formData.append(
+        "offeredTask",
+        JSON.stringify(userProfile.offeredTask || [])
+      );
+      formData.append(
+        "requestedTask",
+        JSON.stringify(userProfile.requestedTask || [])
+      );
+
+      const updatedProfile = await sendRequest(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/users/updateUser`,
+        "PATCH",
+        formData
+      );
+
+      const safeUpdated = {
+        ...updatedProfile,
+        offeredTask: parseSkills(updatedProfile.offeredTask),
+        requestedTask: parseSkills(updatedProfile.requestedTask),
+      };
+
+      setStoredUser(safeUpdated);
+      setUserProfile(safeUpdated);
+      alert("Profile updated successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Something went wrong");
     }
   };
 
   const addTeachSkill = () => {
     if (
       newTeachSkill.trim() !== "" &&
-      !editUser.knows.includes(newTeachSkill)
+      !userProfile.offeredTask.includes(newTeachSkill)
     ) {
-      setEditUser({
-        ...editUser,
-        knows: [...editUser.knows, newTeachSkill.trim()],
-      });
+      setUserProfile((prev) => ({
+        ...prev,
+        offeredTask: [...prev.offeredTask, newTeachSkill.trim()],
+      }));
       setNewTeachSkill("");
     }
   };
 
   const removeTeachSkill = (idx) => {
-    setEditUser({
-      ...editUser,
-      knows: editUser.knows.filter((_, i) => i !== idx),
-    });
+    setUserProfile((prev) => ({
+      ...prev,
+      offeredTask: prev.offeredTask.filter((_, i) => i !== idx),
+    }));
   };
 
   const addLearnSkill = () => {
     if (
       newLearnSkill.trim() !== "" &&
-      !editUser.wants.includes(newLearnSkill)
+      !userProfile.requestedTask.includes(newLearnSkill)
     ) {
-      setEditUser({
-        ...editUser,
-        wants: [...editUser.wants, newLearnSkill.trim()],
-      });
+      setUserProfile((prev) => ({
+        ...prev,
+        requestedTask: [...prev.requestedTask, newLearnSkill.trim()],
+      }));
       setNewLearnSkill("");
     }
   };
 
   const removeLearnSkill = (idx) => {
-    setEditUser({
-      ...editUser,
-      wants: editUser.wants.filter((_, i) => i !== idx),
-    });
-  };
-
-  const handleSave = () => {
-    setStoredUser(editUser);
-    alert("Profile saved successfully!");
+    setUserProfile((prev) => ({
+      ...prev,
+      requestedTask: prev.requestedTask.filter((_, i) => i !== idx),
+    }));
   };
 
   return (
@@ -101,12 +171,17 @@ const ProfileView = () => {
       <div>
         <h2>My Profile</h2>
 
-        {/* Profile Image */}
         <div className="card">
           <div className="profile_img_edit_container">
-            {editUser.img ? (
+            {userProfile.image ? (
               <img
-                src={editUser.img}
+                src={
+                  userProfile.image && userProfile.image.startsWith("data:")
+                    ? userProfile.image
+                    : `${import.meta.env.VITE_APP_ASSET_URL}/${
+                        userProfile.image
+                      }`
+                }
                 alt="preview"
                 className="profile_img_edit"
               />
@@ -114,6 +189,10 @@ const ProfileView = () => {
               <div className="profile_img_edit">No Image</div>
             )}
             <label className="upload_btn">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/685/685655.png"
+                alt="Camera Icon"
+              />
               <input
                 type="file"
                 accept="image/*"
@@ -123,36 +202,32 @@ const ProfileView = () => {
           </div>
         </div>
 
-        {/* Basic Info */}
         <div className="card">
           <h3>Basic Information</h3>
           <label>Display Name</label>
           <input
             type="text"
             name="name"
-            value={editUser.name}
+            value={userProfile.name || ""}
             onChange={handleChange}
           />
-
           <label>Location</label>
           <input
             type="text"
             name="city"
-            value={editUser.city}
+            value={userProfile.city || ""}
             onChange={handleChange}
             placeholder="City, Country"
           />
-
           <label>Bio</label>
           <textarea
-            name="description"
-            value={editUser.description}
+            name="bio"
+            value={userProfile.bio || ""}
             onChange={handleChange}
             placeholder="Tell others about yourself..."
           />
         </div>
 
-        {/* Teach Skills */}
         <div className="card">
           <h3>Skills I Can Teach</h3>
           <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
@@ -168,37 +243,17 @@ const ProfileView = () => {
                 border: "1px solid #ccc",
               }}
             />
-            <button
-              onClick={addTeachSkill}
-            >
+            <button className="add-btn" onClick={addTeachSkill}>
               +
             </button>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {editUser.knows.map((skill, idx) => (
-              <span
-                key={idx}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "6px 12px",
-                  background: "#f1f3f5",
-                  border: "1px solid #ccc",
-                  borderRadius: "20px",
-                  fontSize: "14px",
-                }}
-              >
+            {(userProfile.offeredTask || []).map((skill, idx) => (
+              <span key={idx} className="skill-tag">
                 {skill}
                 <button
                   onClick={() => removeTeachSkill(idx)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    marginLeft: "6px",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    color: "#555",
-                  }}
+                  className="remove-btn"
                 >
                   ×
                 </button>
@@ -207,7 +262,6 @@ const ProfileView = () => {
           </div>
         </div>
 
-        {/* Learn Skills */}
         <div className="card">
           <h3>Skills I Want to Learn</h3>
           <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
@@ -223,37 +277,17 @@ const ProfileView = () => {
                 border: "1px solid #ccc",
               }}
             />
-            <button
-              onClick={addLearnSkill}
-            >
+            <button className="add-btn" onClick={addLearnSkill}>
               +
             </button>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {editUser.wants.map((skill, idx) => (
-              <span
-                key={idx}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "6px 12px",
-                  background: "#f1f3f5",
-                  border: "1px solid #ccc",
-                  borderRadius: "20px",
-                  fontSize: "14px",
-                }}
-              >
+            {(userProfile.requestedTask || []).map((skill, idx) => (
+              <span key={idx} className="skill-tag">
                 {skill}
                 <button
                   onClick={() => removeLearnSkill(idx)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    marginLeft: "6px",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    color: "#555",
-                  }}
+                  className="remove-btn"
                 >
                   ×
                 </button>
@@ -262,9 +296,8 @@ const ProfileView = () => {
           </div>
         </div>
 
-        {/* Save Action */}
         <div className="edit_actions">
-          <button onClick={handleSave} className="save_btn">
+          <button onClick={handleUpdateProfile} className="save_btn">
             Save Profile
           </button>
         </div>
