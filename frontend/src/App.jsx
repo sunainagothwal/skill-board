@@ -13,6 +13,7 @@ import ConfirmSignupPage from "./components/auth/ConfirmSignupPage";
 import ResetPasswordPage from "./components/auth/ResetPasswordPage";
 import RequestsPage from "./components/layout/RequestsPage";
 import MyTasks from "./components/user/MyTasks";
+import ChatPage from "./components/layout/ChatPage";
 
 function App() {
   
@@ -36,7 +37,7 @@ function App() {
             <ProfileView user={JSON.parse(localStorage.getItem("user"))} />
           }
         />
-        <Route path="/my-tasks" element={<MyTasks />}/>
+        <Route path="/my-tasks" element={<MyTasks />} />
         <Route path="/login" element={<SignIn />} />
         <Route path="/confirm-signup" element={<ConfirmSignupPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
@@ -45,6 +46,14 @@ function App() {
           element={
             <PrivateRoute>
               <RequestsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/chats"
+          element={
+            <PrivateRoute>
+              <ChatPage />
             </PrivateRoute>
           }
         />

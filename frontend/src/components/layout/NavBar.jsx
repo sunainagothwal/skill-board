@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../common/context/auth-context.jsx";
-import { FaUser, FaBell } from "react-icons/fa";
-
+import { FaUser, FaBell, FaComments } from "react-icons/fa";
 function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,6 +9,7 @@ function NavBar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
+  const chatRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuthContext();
@@ -62,6 +62,36 @@ function NavBar() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  // state
+  const [chats, setChats] = useState([]);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  // fetch unread chats
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const fetchChats = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_APP_BACKEND_URL}/chat/count`,
+          { method: "GET", credentials: "include" }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setChats(new Array(data.unreadCount).fill({}));
+      } catch (err) {
+        console.error("Failed to fetch unread chats", err);
+      }
+    };
+
+    fetchChats();
+    const interval = setInterval(fetchChats, 10000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
+
+  const unreadChats = chats.length;
+
+
   const handleNotifClick = async () => {
     setNotifOpen(!notifOpen);
 
@@ -94,6 +124,7 @@ function NavBar() {
     logout();
     navigate("/login");
   };
+
 
   return (
     <nav className="navbar">
@@ -178,6 +209,38 @@ function NavBar() {
                 )}
               </div>
             )}
+          </li>
+        )}
+
+        {/* 💬 Chat Icon */}
+        {isLoggedIn && (
+          <li className="chat_dropdown" ref={chatRef}>
+            <span
+              className="chat_link"
+              onClick={() => {
+                setChatOpen(!chatOpen);
+                navigate("/chats"); // go to chats page
+              }}
+              style={{ position: "relative", cursor: "pointer" }}
+            >
+              <FaComments size={18} />
+              {unreadChats > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-6px",
+                    right: "-6px",
+                    background: "blue",
+                    color: "white",
+                    borderRadius: "50%",
+                    fontSize: "12px",
+                    padding: "2px 6px",
+                  }}
+                >
+                  {unreadChats}
+                </span>
+              )}
+            </span>
           </li>
         )}
 

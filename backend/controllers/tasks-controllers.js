@@ -8,6 +8,8 @@ const {
   createNotification,
 } = require("../controllers/notifications-controller");
 
+const ChatMessage = require("../models/chat-message"); // ⬅️ make sure you created this model
+
 // Helper to format task info
 const formatTask = (task) => ({
   _id: task._id,
@@ -115,11 +117,18 @@ const createTask = async (req, res, next) => {
 }; */
 
 const getAllTasks = async (req, res, next) => {
+  const statusFilter = req.query.status; // get status from query param
+  let filter = {};
+
+  if (statusFilter) {
+    filter.status = statusFilter; // e.g., "open"
+  }
+
   let tasks;
   try {
-    tasks = await Task.find()
+    tasks = await Task.find(filter) // use the filter here
       .populate("creator", "name image")
-      .populate("connections.user", "name image") // populate users in connections
+      .populate("connections.user", "name image")
       .select(
         "title description requestedTask offeredTask location attachments deadline creator createdAt status connections"
       );
@@ -160,6 +169,7 @@ const getAllTasks = async (req, res, next) => {
 
   res.json({ tasks: transformedTasks });
 };
+
 
 // Connect request
 const connectToTask = async (req, res, next) => {
@@ -314,6 +324,24 @@ const acceptConnection = async (req, res, next) => {
       message: `accepted your request for task: ${task.title}`,
     });
 
+    // ✅ Auto create default chat message (if not already exists)
+    const alreadyExists = await ChatMessage.findOne({
+      task: taskId,
+      sender: currentUser,
+      receiver: userId,
+    });
+
+    if (!alreadyExists) {
+      const defaultMessage = new ChatMessage({
+        sender: currentUser,
+        receiver: userId,
+        task: taskId,
+        message:
+          "Hey! I have accepted your task request, let's discuss more on it?",
+      });
+      await defaultMessage.save();
+    }
+
     res.status(200).json({
       message: `You accepted the connection request from ${connection.user.name}`,
       requesterName: connection.user.name,
@@ -323,6 +351,8 @@ const acceptConnection = async (req, res, next) => {
     return next(new HttpError("Failed to accept connection request", 500));
   }
 };
+
+
 
 
 
