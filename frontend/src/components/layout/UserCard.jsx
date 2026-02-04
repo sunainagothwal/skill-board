@@ -131,7 +131,7 @@ getAllTasks();
     <>
       <section className="px-4 sm:px-8 py-10 bg-gray-50 min-h-screen flex flex-col items-center justify-center">
         <h2 className="text-3xl font-bold text-center text-gray-800">
-          People on <span className="text-blue-600">SkillBoard</span>
+          People on <span className="text-blue-600">SkillSwap</span>
         </h2>
         <p className="mt-2 text-gray-500 text-center text-base">
           Connect with talented individuals and swap your skills.

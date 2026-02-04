@@ -129,7 +129,7 @@ function NavBar() {
   return (
     <nav className="navbar">
       <div className="logo-section">
-        <span className="logo">SkillBoard</span>
+        <span className="logo">SkillSwap</span>
       </div>
 
       <div

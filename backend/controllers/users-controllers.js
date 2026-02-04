@@ -71,10 +71,10 @@ const signup = async (req, res, next) => {
   // Send confirmation email
   const emailOptions = {
     to: createdUser.email,
-    subject: "Confirm Your Account - SwapTask",
+    subject: "Confirm Your Account - SkillSwap",
     html: `
       <div style="font-family: Arial, sans-serif; text-align:center;">
-        <h2>Welcome to SwapTask, ${createdUser.name} 🎉</h2>
+        <h2>Welcome to SkillSwap, ${createdUser.name} 🎉</h2>
         <p>Click below to confirm your account:</p>
         <a href="${confirmLink}" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#28a745; color:white; text-decoration:none; border-radius:5px;">Confirm Account</a>
         <p>This link will expire in 24 hours.</p>
